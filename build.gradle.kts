@@ -30,7 +30,7 @@ dependencies {
 tasks {
     patchPluginXml {
         sinceBuild.set("242")
-        untilBuild.set("251.*")
+        untilBuild.set("253.*")
     }
     // Skip searchable options to avoid Gradle plugin Java 25 bug
     buildSearchableOptions {
