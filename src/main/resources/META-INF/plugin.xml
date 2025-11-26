@@ -1,0 +1,47 @@
+<idea-plugin>
+    <id>org.nanoya.terminal-manager</id>
+    <name>Terminal Manager</name>
+    <vendor email="support@nanoya.org" url="https://github.com/nanoya">Nanoya</vendor>
+
+    <description><![CDATA[
+    Customize which terminal tabs open on project startup and configure their working directories and shell types.
+    <br><br>
+    Features:
+    <ul>
+        <li>Configure multiple terminal tabs to open automatically on project startup</li>
+        <li>Choose shell type per tab (PowerShell, WSL/Ubuntu, CMD, Git Bash, etc.)</li>
+        <li>Set custom working directories (relative to project root)</li>
+        <li>Name your terminal tabs for easy identification</li>
+        <li>Reorder tabs with up/down controls</li>
+        <li>Per-project configuration stored in <code>.terminals/startup-terminals.json</code></li>
+    </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.plugins.terminal</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="org.nanoya.terminalmanager.settings.TerminalManagerSettings"/>
+
+        <projectConfigurable
+                parentId="tools"
+                groupId="terminal"
+                instance="org.nanoya.terminalmanager.settings.TerminalManagerConfigurable"
+                id="org.nanoya.terminalmanager.settings.TerminalManagerConfigurable"
+                displayName="Startup Terminals"/>
+
+        <postStartupActivity implementation="org.nanoya.terminalmanager.TerminalStartupActivity"/>
+        <postStartupActivity implementation="org.nanoya.terminalmanager.TerminalGearActionInstaller"/>
+    </extensions>
+
+    <actions>
+        <action id="TerminalManager.OpenSettings"
+                class="org.nanoya.terminalmanager.actions.OpenSettingsAction"
+                text="Startup Terminals Settings"
+                description="Configure terminal tabs that open on project startup"
+                icon="AllIcons.General.Settings">
+            <!-- Add to Tools menu -->
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

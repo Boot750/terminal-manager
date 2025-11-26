@@ -1,0 +1,104 @@
+package org.nanoya.terminalmanager
+
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.startup.ProjectActivity
+import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.ui.content.ContentManager
+import org.jetbrains.plugins.terminal.TerminalTabState
+import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
+import org.jetbrains.plugins.terminal.TerminalToolWindowManager
+import org.nanoya.terminalmanager.settings.TerminalManagerSettings
+import org.nanoya.terminalmanager.settings.TerminalTabConfig
+import java.io.File
+
+class TerminalStartupActivity : ProjectActivity {
+
+    override suspend fun execute(project: Project) {
+        val settings = TerminalManagerSettings.getInstance(project)
+
+        if (!settings.enabled || settings.tabs.isEmpty()) {
+            return
+        }
+
+        val enabledTabs = settings.tabs.filter { it.enabled }
+        if (enabledTabs.isEmpty()) {
+            return
+        }
+
+        ApplicationManager.getApplication().invokeLater {
+            val toolWindowManager = ToolWindowManager.getInstance(project)
+            val terminalToolWindow = toolWindowManager.getToolWindow(TerminalToolWindowFactory.TOOL_WINDOW_ID)
+
+            terminalToolWindow?.let { toolWindow ->
+                toolWindow.activate {
+                    val terminalManager = TerminalToolWindowManager.getInstance(project)
+
+                    // Close existing terminals if option is enabled
+                    if (settings.closeExistingTerminals) {
+                        closeAllTerminalTabs(toolWindow.contentManager)
+                    }
+
+                    enabledTabs.forEach { tabConfig ->
+                        createTerminalTab(terminalManager, tabConfig, project)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun closeAllTerminalTabs(contentManager: ContentManager) {
+        val contents = contentManager.contents.toList()
+        contents.forEach { content ->
+            contentManager.removeContent(content, true)
+        }
+    }
+
+    private fun createTerminalTab(
+        terminalManager: TerminalToolWindowManager,
+        tabConfig: TerminalTabConfig,
+        project: Project
+    ) {
+        val workingDir = resolveWorkingDirectory(tabConfig.workingDirectory, project)
+        val shellInfo = tabConfig.getShellInfo()
+
+        // Build TerminalTabState with shell command and working directory
+        val tabState = TerminalTabState().apply {
+            myTabName = tabConfig.name
+            myWorkingDirectory = workingDir
+            // Set shell command if not default
+            if (shellInfo != null && shellInfo.id != "default" && shellInfo.command.isNotEmpty()) {
+                myShellCommand = shellInfo.command
+            }
+        }
+
+        // Create terminal with proper shell directly (no need to execute shell as command)
+        terminalManager.createNewSession(terminalManager.terminalRunner, tabState)
+    }
+
+    private fun resolveWorkingDirectory(configuredDir: String, project: Project): String {
+        val projectPath = project.basePath ?: System.getProperty("user.home")
+
+        if (configuredDir.isBlank() || configuredDir == ".") {
+            return projectPath
+        }
+
+        // Check if it's an absolute path
+        val file = File(configuredDir)
+        if (file.isAbsolute) {
+            return if (file.exists() && file.isDirectory) {
+                configuredDir
+            } else {
+                projectPath
+            }
+        }
+
+        // Treat as relative path to project
+        val resolved = File(projectPath, configuredDir)
+        return if (resolved.exists() && resolved.isDirectory) {
+            resolved.absolutePath
+        } else {
+            projectPath
+        }
+    }
+}
