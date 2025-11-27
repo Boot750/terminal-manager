@@ -20,8 +20,10 @@
     <change-notes><![CDATA[
     <b>1.0.2</b>
     <ul>
-        <li>Plugin now displays its own toolbar button instead of overwriting the terminal gear menu</li>
-        <li>New console icon for better visual distinction</li>
+        <li>Plugin now displays its own toolbar buttons instead of overwriting the terminal gear menu</li>
+        <li>New console icon for settings button</li>
+        <li>Added reset button to close all terminals and reopen configured startup terminals</li>
+        <li>Reset confirmation dialog with "Don't ask again" option</li>
     </ul>
     ]]></change-notes>
 
@@ -50,6 +52,12 @@
                 icon="AllIcons.Debugger.Console">
             <!-- Add to Tools menu -->
             <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+        <action id="TerminalManager.ResetTerminals"
+                class="org.nanoya.terminalmanager.actions.ResetTerminalsAction"
+                text="Reset Terminals"
+                description="Close all terminals and reopen configured startup terminals"
+                icon="AllIcons.Actions.Restart">
         </action>
     </actions>
 </idea-plugin>

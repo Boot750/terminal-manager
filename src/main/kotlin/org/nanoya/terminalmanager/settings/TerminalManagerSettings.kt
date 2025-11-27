@@ -14,6 +14,7 @@ class TerminalManagerSettings(private val project: Project) {
 
     var enabled: Boolean = true
     var closeExistingTerminals: Boolean = false
+    var skipResetConfirmation: Boolean = false
     var tabs: MutableList<TerminalTabConfig> = mutableListOf()
 
     init {
@@ -37,10 +38,12 @@ class TerminalManagerSettings(private val project: Project) {
                 val config = gson.fromJson(json, TerminalManagerConfig::class.java)
                 enabled = config.enabled
                 closeExistingTerminals = config.closeExistingTerminals
+                skipResetConfirmation = config.skipResetConfirmation
                 tabs = config.tabs.toMutableList()
             } catch (e: Exception) {
                 enabled = true
                 closeExistingTerminals = false
+                skipResetConfirmation = false
                 tabs = mutableListOf()
             }
         }
@@ -52,7 +55,7 @@ class TerminalManagerSettings(private val project: Project) {
             configDir.mkdirs()
         }
 
-        val config = TerminalManagerConfig(enabled, closeExistingTerminals, tabs.toList())
+        val config = TerminalManagerConfig(enabled, closeExistingTerminals, skipResetConfirmation, tabs.toList())
         val json = gson.toJson(config)
         getConfigFile().writeText(json)
     }
@@ -67,5 +70,6 @@ class TerminalManagerSettings(private val project: Project) {
 data class TerminalManagerConfig(
     val enabled: Boolean = true,
     val closeExistingTerminals: Boolean = false,
+    val skipResetConfirmation: Boolean = false,
     val tabs: List<TerminalTabConfig> = emptyList()
 )
