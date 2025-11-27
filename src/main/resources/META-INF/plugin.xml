@@ -17,6 +17,14 @@
     </ul>
     ]]></description>
 
+    <change-notes><![CDATA[
+    <b>1.0.2</b>
+    <ul>
+        <li>Plugin now displays its own toolbar button instead of overwriting the terminal gear menu</li>
+        <li>New console icon for better visual distinction</li>
+    </ul>
+    ]]></change-notes>
+
     <depends>com.intellij.modules.platform</depends>
     <depends>org.jetbrains.plugins.terminal</depends>
 
