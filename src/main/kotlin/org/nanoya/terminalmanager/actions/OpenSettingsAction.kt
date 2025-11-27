@@ -10,7 +10,7 @@ import org.nanoya.terminalmanager.settings.TerminalManagerConfigurable
 class OpenSettingsAction : AnAction(
     "Startup Terminals Settings",
     "Configure terminal tabs that open on project startup",
-    AllIcons.General.Settings
+    AllIcons.Debugger.Console
 ) {
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
 

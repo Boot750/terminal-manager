@@ -39,7 +39,7 @@
                 class="org.nanoya.terminalmanager.actions.OpenSettingsAction"
                 text="Startup Terminals Settings"
                 description="Configure terminal tabs that open on project startup"
-                icon="AllIcons.General.Settings">
+                icon="AllIcons.Debugger.Console">
             <!-- Add to Tools menu -->
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>

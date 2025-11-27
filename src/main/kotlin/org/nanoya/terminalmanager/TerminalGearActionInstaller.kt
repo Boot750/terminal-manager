@@ -1,6 +1,5 @@
 package org.nanoya.terminalmanager
 
-import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.wm.ToolWindowManager
@@ -14,9 +13,7 @@ class TerminalGearActionInstaller : ProjectActivity {
         val terminalToolWindow = toolWindowManager.getToolWindow(TerminalToolWindowFactory.TOOL_WINDOW_ID)
 
         terminalToolWindow?.let { toolWindow ->
-            val gearActions = DefaultActionGroup()
-            gearActions.add(OpenSettingsAction())
-            toolWindow.setAdditionalGearActions(gearActions)
+            toolWindow.setTitleActions(listOf(OpenSettingsAction()))
         }
     }
 }
