@@ -1,6 +1,7 @@
 <idea-plugin>
     <id>org.nanoya.terminal-manager</id>
     <name>Terminal Manager</name>
+    <version>1.0.3</version>
     <vendor email="support@nanoya.org" url="https://github.com/nanoya">Nanoya</vendor>
 
     <description><![CDATA[
@@ -18,6 +19,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <b>1.0.3</b>
+    <ul>
+        <li>Added plugin icon</li>
+        <li>Fixed EDT threading issue on startup</li>
+    </ul>
     <b>1.0.2</b>
     <ul>
         <li>Plugin now displays its own toolbar buttons instead of overwriting the terminal gear menu</li>
