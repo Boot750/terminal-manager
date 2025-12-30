@@ -26,9 +26,6 @@ jobs:
       - name: Build Plugin
         run: ./gradlew buildPlugin
 
-      - name: Verify Plugin
-        run: ./gradlew verifyPlugin
-
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -40,3 +37,41 @@ jobs:
         env:
           JETBRAINS_TOKEN: ${{ secrets.JETBRAINS_TOKEN }}
         run: ./gradlew publishPlugin
+
+  # Verify against all IDEs in parallel (each gets its own runner)
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false  # Continue checking other IDEs if one fails
+      matrix:
+        ide:
+          - { type: "IC", name: "IntelliJ IDEA Community" }
+          - { type: "IU", name: "IntelliJ IDEA Ultimate" }
+          - { type: "WS", name: "WebStorm" }
+          - { type: "PS", name: "PhpStorm" }
+          - { type: "PY", name: "PyCharm Professional" }
+          - { type: "PC", name: "PyCharm Community" }
+          - { type: "GO", name: "GoLand" }
+          - { type: "RM", name: "RubyMine" }
+          - { type: "CL", name: "CLion" }
+          - { type: "RD", name: "Rider" }
+          - { type: "DG", name: "DataGrip" }
+          - { type: "RR", name: "RustRover" }
+    name: Verify (${{ matrix.ide.name }})
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradlew Executable
+        run: chmod +x ./gradlew
+
+      - name: Verify Plugin - ${{ matrix.ide.name }}
+        run: ./gradlew verifyPlugin -PverifyIdeType=${{ matrix.ide.type }}

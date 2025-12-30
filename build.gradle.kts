@@ -38,39 +38,40 @@ dependencies {
 
 intellijPlatform {
     pluginVerification {
-        // IDE versions to verify against (matching sinceBuild 243 to untilBuild 253.*)
+        // Only fail on compatibility errors, not warnings
+        failureLevel.set(listOf(
+            org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.COMPATIBILITY_PROBLEMS,
+            org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.INVALID_PLUGIN
+        ))
+
+        // IDE is specified via command line property for matrix CI builds
+        // Usage: ./gradlew verifyPlugin -PverifyIdeType=IC -PverifyIdeVersion=2024.3.2
         ides {
-            // IntelliJ IDEA
-            ide(IntelliJPlatformType.IntellijIdeaCommunity, "2024.3.2")
-            ide(IntelliJPlatformType.IntellijIdeaUltimate, "2024.3.2")
+            val ideType = providers.gradleProperty("verifyIdeType").orNull
+            val ideVersion = providers.gradleProperty("verifyIdeVersion").orNull ?: "2024.3.2"
 
-            // WebStorm
-            ide(IntelliJPlatformType.WebStorm, "2024.3.2")
-
-            // PyCharm
-            ide(IntelliJPlatformType.PyCharmCommunity, "2024.3.2")
-            ide(IntelliJPlatformType.PyCharmProfessional, "2024.3.2")
-
-            // PhpStorm
-            ide(IntelliJPlatformType.PhpStorm, "2024.3.2")
-
-            // Rider
-            ide(IntelliJPlatformType.Rider, "2024.3.2")
-
-            // GoLand
-            ide(IntelliJPlatformType.GoLand, "2024.3.2")
-
-            // RubyMine
-            ide(IntelliJPlatformType.RubyMine, "2024.3.2")
-
-            // CLion
-            ide(IntelliJPlatformType.CLion, "2024.3.2")
-
-            // DataGrip
-            ide(IntelliJPlatformType.DataGrip, "2024.3.2")
-
-            // RustRover
-            ide(IntelliJPlatformType.RustRover, "2024.3.2")
+            if (ideType != null) {
+                // Single IDE from CI matrix
+                val platformType = when (ideType) {
+                    "IC" -> IntelliJPlatformType.IntellijIdeaCommunity
+                    "IU" -> IntelliJPlatformType.IntellijIdeaUltimate
+                    "WS" -> IntelliJPlatformType.WebStorm
+                    "PS" -> IntelliJPlatformType.PhpStorm
+                    "PY" -> IntelliJPlatformType.PyCharmProfessional
+                    "PC" -> IntelliJPlatformType.PyCharmCommunity
+                    "GO" -> IntelliJPlatformType.GoLand
+                    "RM" -> IntelliJPlatformType.RubyMine
+                    "CL" -> IntelliJPlatformType.CLion
+                    "RD" -> IntelliJPlatformType.Rider
+                    "DG" -> IntelliJPlatformType.DataGrip
+                    "RR" -> IntelliJPlatformType.RustRover
+                    else -> IntelliJPlatformType.IntellijIdeaCommunity
+                }
+                ide(platformType, ideVersion)
+            } else {
+                // Default: verify against primary IDE locally
+                ide(IntelliJPlatformType.IntellijIdeaCommunity, ideVersion)
+            }
         }
     }
 }
