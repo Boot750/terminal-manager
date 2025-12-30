@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "org.nanoya"
-version = "1.0.3"
+version = "1.1.0"
 
 repositories {
     mavenCentral()
@@ -16,20 +16,24 @@ repositories {
 
 kotlin {
     jvmToolchain(21)
+    compilerOptions {
+        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9)
+    }
 }
 
 dependencies {
     intellijPlatform {
-        intellijIdeaCommunity("2024.2.4")
+        intellijIdeaCommunity("2024.3.2")
         bundledPlugin("org.jetbrains.plugins.terminal")
     }
+    compileOnly("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("com.google.code.gson:gson:2.11.0")
     testImplementation(kotlin("test"))
 }
 
 tasks {
     patchPluginXml {
-        sinceBuild.set("242")
+        sinceBuild.set("243")
         untilBuild.set("253.*")
     }
     // Skip searchable options to avoid Gradle plugin Java 25 bug
