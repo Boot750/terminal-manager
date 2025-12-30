@@ -59,7 +59,7 @@
     <actions>
         <action id="TerminalManager.OpenSettings"
                 class="org.nanoya.terminalmanager.actions.OpenSettingsAction"
-                text="Startup Terminals Settings"
+                text="Terminal Manager: Startup Settings"
                 description="Configure terminal tabs that open on project startup"
                 icon="AllIcons.Debugger.Console">
             <!-- Add to Tools menu -->
@@ -67,7 +67,7 @@
         </action>
         <action id="TerminalManager.ResetTerminals"
                 class="org.nanoya.terminalmanager.actions.ResetTerminalsAction"
-                text="Reset Terminals"
+                text="Terminal Manager: Reset Terminals"
                 description="Close all terminals and reopen configured startup terminals"
                 icon="AllIcons.Actions.Restart">
         </action>
@@ -75,55 +75,55 @@
         <!-- Terminal tab switching actions -->
         <action id="TerminalManager.SwitchToTab1"
                 class="org.nanoya.terminalmanager.actions.SwitchToTerminalTab1Action"
-                text="Switch to Terminal Tab 1"
+                text="Terminal Manager: Switch to Tab 1"
                 description="Switch to the first terminal tab">
             <keyboard-shortcut keymap="$default" first-keystroke="alt shift 1"/>
         </action>
         <action id="TerminalManager.SwitchToTab2"
                 class="org.nanoya.terminalmanager.actions.SwitchToTerminalTab2Action"
-                text="Switch to Terminal Tab 2"
+                text="Terminal Manager: Switch to Tab 2"
                 description="Switch to the second terminal tab">
             <keyboard-shortcut keymap="$default" first-keystroke="alt shift 2"/>
         </action>
         <action id="TerminalManager.SwitchToTab3"
                 class="org.nanoya.terminalmanager.actions.SwitchToTerminalTab3Action"
-                text="Switch to Terminal Tab 3"
+                text="Terminal Manager: Switch to Tab 3"
                 description="Switch to the third terminal tab">
             <keyboard-shortcut keymap="$default" first-keystroke="alt shift 3"/>
         </action>
         <action id="TerminalManager.SwitchToTab4"
                 class="org.nanoya.terminalmanager.actions.SwitchToTerminalTab4Action"
-                text="Switch to Terminal Tab 4"
+                text="Terminal Manager: Switch to Tab 4"
                 description="Switch to the fourth terminal tab">
             <keyboard-shortcut keymap="$default" first-keystroke="alt shift 4"/>
         </action>
         <action id="TerminalManager.SwitchToTab5"
                 class="org.nanoya.terminalmanager.actions.SwitchToTerminalTab5Action"
-                text="Switch to Terminal Tab 5"
+                text="Terminal Manager: Switch to Tab 5"
                 description="Switch to the fifth terminal tab">
             <keyboard-shortcut keymap="$default" first-keystroke="alt shift 5"/>
         </action>
         <action id="TerminalManager.SwitchToTab6"
                 class="org.nanoya.terminalmanager.actions.SwitchToTerminalTab6Action"
-                text="Switch to Terminal Tab 6"
+                text="Terminal Manager: Switch to Tab 6"
                 description="Switch to the sixth terminal tab">
             <keyboard-shortcut keymap="$default" first-keystroke="alt shift 6"/>
         </action>
         <action id="TerminalManager.SwitchToTab7"
                 class="org.nanoya.terminalmanager.actions.SwitchToTerminalTab7Action"
-                text="Switch to Terminal Tab 7"
+                text="Terminal Manager: Switch to Tab 7"
                 description="Switch to the seventh terminal tab">
             <keyboard-shortcut keymap="$default" first-keystroke="alt shift 7"/>
         </action>
         <action id="TerminalManager.SwitchToTab8"
                 class="org.nanoya.terminalmanager.actions.SwitchToTerminalTab8Action"
-                text="Switch to Terminal Tab 8"
+                text="Terminal Manager: Switch to Tab 8"
                 description="Switch to the eighth terminal tab">
             <keyboard-shortcut keymap="$default" first-keystroke="alt shift 8"/>
         </action>
         <action id="TerminalManager.SwitchToTab9"
                 class="org.nanoya.terminalmanager.actions.SwitchToTerminalTab9Action"
-                text="Switch to Terminal Tab 9"
+                text="Terminal Manager: Switch to Tab 9"
                 description="Switch to the ninth terminal tab">
             <keyboard-shortcut keymap="$default" first-keystroke="alt shift 9"/>
         </action>
@@ -131,13 +131,13 @@
         <!-- Terminal tab navigation actions -->
         <action id="TerminalManager.NextTerminalTab"
                 class="org.nanoya.terminalmanager.actions.NextTerminalTabAction"
-                text="Next Terminal Tab"
+                text="Terminal Manager: Next Tab"
                 description="Switch to the next terminal tab">
             <keyboard-shortcut keymap="$default" first-keystroke="alt shift CLOSE_BRACKET"/>
         </action>
         <action id="TerminalManager.PreviousTerminalTab"
                 class="org.nanoya.terminalmanager.actions.PreviousTerminalTabAction"
-                text="Previous Terminal Tab"
+                text="Terminal Manager: Previous Tab"
                 description="Switch to the previous terminal tab">
             <keyboard-shortcut keymap="$default" first-keystroke="alt shift OPEN_BRACKET"/>
         </action>

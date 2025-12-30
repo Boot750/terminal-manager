@@ -10,7 +10,7 @@ import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
  * Action to switch to the previous terminal tab with wrap-around.
  */
 class PreviousTerminalTabAction : AnAction(
-    "Previous Terminal Tab",
+    "Terminal Manager: Previous Tab",
     "Switch to the previous terminal tab",
     null
 ) {

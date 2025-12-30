@@ -10,7 +10,7 @@ import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
  * Action to switch to the next terminal tab with wrap-around.
  */
 class NextTerminalTabAction : AnAction(
-    "Next Terminal Tab",
+    "Terminal Manager: Next Tab",
     "Switch to the next terminal tab",
     null
 ) {
