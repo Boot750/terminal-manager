@@ -3,6 +3,7 @@ package org.nanoya.terminalmanager.settings
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
+import com.intellij.ui.JBColor
 import com.intellij.ui.ToolbarDecorator
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
@@ -11,6 +12,7 @@ import com.intellij.ui.table.JBTable
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
+import java.awt.FlowLayout
 import javax.swing.*
 import javax.swing.table.AbstractTableModel
 import javax.swing.table.TableCellEditor
@@ -23,16 +25,21 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
     private var closeExistingCheckbox: JBCheckBox? = null
     private var tableModel: TerminalTabTableModel? = null
     private var table: JBTable? = null
+    private var trustBannerPanel: JPanel? = null
 
     override fun getDisplayName(): String = "Startup Terminals"
 
     override fun createComponent(): JComponent {
         val settings = TerminalManagerSettings.getInstance(project)
+        val trustedSettings = TrustedProjectsSettings.getInstance()
 
         // Refresh shell detection when opening settings
         ShellDetector.refreshCache()
 
         mainPanel = JPanel(BorderLayout(0, 10))
+
+        // Create trust warning banner
+        trustBannerPanel = createTrustBannerPanel(trustedSettings)
 
         enabledCheckbox = JBCheckBox("Open terminals on project startup", settings.enabled)
         closeExistingCheckbox = JBCheckBox("Close existing terminal tabs first", settings.closeExistingTerminals)
@@ -44,8 +51,9 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
 
             columnModel.getColumn(0).preferredWidth = 120  // Name
             columnModel.getColumn(1).preferredWidth = 150  // Shell Type
-            columnModel.getColumn(2).preferredWidth = 280  // Working Directory
-            columnModel.getColumn(3).preferredWidth = 60   // Enabled
+            columnModel.getColumn(2).preferredWidth = 200  // Working Directory
+            columnModel.getColumn(3).preferredWidth = 200  // Startup Command
+            columnModel.getColumn(4).preferredWidth = 60   // Enabled
 
             // Shell type dropdown
             columnModel.getColumn(1).cellEditor = ShellInfoCellEditor()
@@ -88,6 +96,7 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
 
         val helpLabel = JBLabel(
             "<html>Working directory is relative to project root. Leave blank for project root.<br>" +
+            "Startup command runs after the terminal initializes (requires trust).<br>" +
             "Config stored in: <code>.terminals/startup-terminals.json</code></html>"
         )
 
@@ -97,10 +106,58 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
             add(helpLabel, BorderLayout.SOUTH)
         }
 
-        mainPanel!!.add(topPanel, BorderLayout.NORTH)
+        // Wrap top panel with trust banner
+        val headerPanel = JPanel().apply {
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
+            if (trustBannerPanel != null) {
+                add(trustBannerPanel)
+                add(Box.createVerticalStrut(10))
+            }
+            add(topPanel)
+        }
+
+        mainPanel!!.add(headerPanel, BorderLayout.NORTH)
         mainPanel!!.add(centerPanel, BorderLayout.CENTER)
 
+        // Update banner visibility based on whether any startup commands exist
+        updateTrustBannerVisibility()
+
         return mainPanel!!
+    }
+
+    private fun createTrustBannerPanel(trustedSettings: TrustedProjectsSettings): JPanel {
+        val panel = JPanel(BorderLayout(10, 0)).apply {
+            background = JBColor(0xFFF3CD, 0x5C4A00)
+            border = BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(JBColor(0xFFECB5, 0x7A6200)),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)
+            )
+        }
+
+        val warningLabel = JBLabel(
+            "<html><b>Startup commands are configured but not enabled.</b><br>" +
+            "Commands in project configs can run arbitrary code. Only enable if you trust this project.</html>"
+        )
+
+        val enableButton = JButton("Enable Startup Commands").apply {
+            addActionListener {
+                trustedSettings.trustProject(project)
+                updateTrustBannerVisibility()
+            }
+        }
+
+        panel.add(warningLabel, BorderLayout.CENTER)
+        panel.add(enableButton, BorderLayout.EAST)
+
+        return panel
+    }
+
+    private fun updateTrustBannerVisibility() {
+        val trustedSettings = TrustedProjectsSettings.getInstance()
+        val hasStartupCommands = tableModel?.getTabs()?.any { it.startupCommand.isNotBlank() } ?: false
+        val isTrusted = trustedSettings.isProjectTrusted(project)
+
+        trustBannerPanel?.isVisible = hasStartupCommands && !isTrusted
     }
 
     override fun isModified(): Boolean {
@@ -115,7 +172,8 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
             current.name != saved.name ||
             current.shellId != saved.shellId ||
             current.workingDirectory != saved.workingDirectory ||
-            current.enabled != saved.enabled
+            current.enabled != saved.enabled ||
+            current.startupCommand != saved.startupCommand
         }
     }
 
@@ -142,12 +200,13 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
         closeExistingCheckbox = null
         tableModel = null
         table = null
+        trustBannerPanel = null
     }
 }
 
 class TerminalTabTableModel(private var tabs: MutableList<TerminalTabConfig>) : AbstractTableModel() {
 
-    private val columnNames = arrayOf("Name", "Shell", "Working Directory", "Enabled")
+    private val columnNames = arrayOf("Name", "Shell", "Working Directory", "Startup Command", "Enabled")
 
     override fun getRowCount(): Int = tabs.size
 
@@ -157,7 +216,7 @@ class TerminalTabTableModel(private var tabs: MutableList<TerminalTabConfig>) : 
 
     override fun getColumnClass(columnIndex: Int): Class<*> {
         return when (columnIndex) {
-            3 -> java.lang.Boolean::class.java
+            4 -> java.lang.Boolean::class.java
             else -> String::class.java
         }
     }
@@ -170,7 +229,8 @@ class TerminalTabTableModel(private var tabs: MutableList<TerminalTabConfig>) : 
             0 -> tab.name
             1 -> tab.shellId
             2 -> tab.workingDirectory
-            3 -> tab.enabled
+            3 -> tab.startupCommand
+            4 -> tab.enabled
             else -> ""
         }
     }
@@ -181,7 +241,8 @@ class TerminalTabTableModel(private var tabs: MutableList<TerminalTabConfig>) : 
             0 -> tab.name = aValue as? String ?: ""
             1 -> tab.shellId = (aValue as? ShellInfo)?.id ?: (aValue as? String) ?: "default"
             2 -> tab.workingDirectory = aValue as? String ?: ""
-            3 -> tab.enabled = aValue as? Boolean ?: true
+            3 -> tab.startupCommand = aValue as? String ?: ""
+            4 -> tab.enabled = aValue as? Boolean ?: true
         }
         fireTableCellUpdated(rowIndex, columnIndex)
     }

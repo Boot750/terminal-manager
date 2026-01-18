@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>org.nanoya.terminal-manager</id>
     <name>Terminal Manager</name>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <vendor email="support@nanoya.org" url="https://github.com/nanoya">Nanoya</vendor>
 
     <description><![CDATA[
@@ -12,6 +12,7 @@
         <li>Configure multiple terminal tabs to open automatically on project startup</li>
         <li>Choose shell type per tab (PowerShell, WSL/Ubuntu, CMD, Git Bash, etc.)</li>
         <li>Set custom working directories (relative to project root)</li>
+        <li>Run startup commands when terminals open (with security-focused opt-in trust model)</li>
         <li>Name your terminal tabs for easy identification</li>
         <li>Reorder tabs with up/down controls</li>
         <li>Per-project configuration stored in <code>.terminals/startup-terminals.json</code></li>
@@ -19,6 +20,13 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <b>1.2.0</b>
+    <ul>
+        <li>Added startup commands - execute a command when terminal opens</li>
+        <li>Security-focused opt-in model: commands only run if project is explicitly trusted</li>
+        <li>Trust setting stored locally per-machine, not in project config</li>
+        <li>Warning banner in settings when commands exist but project isn't trusted</li>
+    </ul>
     <b>1.1.0</b>
     <ul>
         <li>Added keyboard shortcuts to switch terminal tabs (Alt+Shift+1-9)</li>
@@ -43,6 +51,7 @@
     <depends>org.jetbrains.plugins.terminal</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="org.nanoya.terminalmanager.settings.TrustedProjectsSettings"/>
         <projectService serviceImplementation="org.nanoya.terminalmanager.settings.TerminalManagerSettings"/>
 
         <projectConfigurable
