@@ -224,32 +224,21 @@ class GotoNextSplitAction : AnAction(
             val focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().focusOwner
                 ?: return@activate
 
-            // Find the OnePixelSplitter that contains the terminal splits
-            // Hierarchy: TerminalToolWindowPanel -> ... -> InternalDecoratorImpl -> OnePixelSplitter -> InternalDecoratorImpl
-            var splitter: java.awt.Component? = null
-            var terminalToolWindowPanel: java.awt.Component? = null
-            var internalDecoratorCount = 0
+            // Find all terminal panels by going up to the tool window boundary
+            // and searching from there. This handles nested splitters (3+ groups).
+            var searchRoot: java.awt.Component? = null
             var current: java.awt.Component? = focusOwner
             while (current != null) {
                 val className = current.javaClass.name
-                if (className.contains("TerminalToolWindowPanel")) {
-                    terminalToolWindowPanel = current
-                }
-                if (className.contains("OnePixelSplitter")) {
-                    splitter = current
-                }
+                // Use the outermost InternalDecoratorImpl as search root
                 if (className.contains("InternalDecoratorImpl")) {
-                    internalDecoratorCount++
-                    // Stop at the second InternalDecoratorImpl (the outer tool window boundary)
-                    if (internalDecoratorCount >= 2) break
+                    searchRoot = current
                 }
-                // Also stop at ThreeComponentsSplitter (IDE main splitter)
+                // Stop at ThreeComponentsSplitter (IDE main splitter)
                 if (className.contains("ThreeComponentsSplitter")) break
                 current = current.parent
             }
 
-            // Use the splitter if found, otherwise fall back to TerminalToolWindowPanel
-            val searchRoot = splitter ?: terminalToolWindowPanel
             if (searchRoot == null) return@activate
 
             // Find all TerminalPanel components within the container
@@ -348,32 +337,21 @@ class GotoPreviousSplitAction : AnAction(
             val focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().focusOwner
                 ?: return@activate
 
-            // Find the OnePixelSplitter that contains the terminal splits
-            // Hierarchy: TerminalToolWindowPanel -> ... -> InternalDecoratorImpl -> OnePixelSplitter -> InternalDecoratorImpl
-            var splitter: java.awt.Component? = null
-            var terminalToolWindowPanel: java.awt.Component? = null
-            var internalDecoratorCount = 0
+            // Find all terminal panels by going up to the tool window boundary
+            // and searching from there. This handles nested splitters (3+ groups).
+            var searchRoot: java.awt.Component? = null
             var current: java.awt.Component? = focusOwner
             while (current != null) {
                 val className = current.javaClass.name
-                if (className.contains("TerminalToolWindowPanel")) {
-                    terminalToolWindowPanel = current
-                }
-                if (className.contains("OnePixelSplitter")) {
-                    splitter = current
-                }
+                // Use the outermost InternalDecoratorImpl as search root
                 if (className.contains("InternalDecoratorImpl")) {
-                    internalDecoratorCount++
-                    // Stop at the second InternalDecoratorImpl (the outer tool window boundary)
-                    if (internalDecoratorCount >= 2) break
+                    searchRoot = current
                 }
-                // Also stop at ThreeComponentsSplitter (IDE main splitter)
+                // Stop at ThreeComponentsSplitter (IDE main splitter)
                 if (className.contains("ThreeComponentsSplitter")) break
                 current = current.parent
             }
 
-            // Use the splitter if found, otherwise fall back to TerminalToolWindowPanel
-            val searchRoot = splitter ?: terminalToolWindowPanel
             if (searchRoot == null) return@activate
 
             // Find all TerminalPanel components within the container
