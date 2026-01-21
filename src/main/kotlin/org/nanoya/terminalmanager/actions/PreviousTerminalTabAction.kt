@@ -1,13 +1,20 @@
 package org.nanoya.terminalmanager.actions
 
+import com.intellij.ide.DataManager
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.ActionPlaces
+import com.intellij.openapi.actionSystem.ActionUiKind
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.wm.ToolWindowManager
 import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
+import java.awt.KeyboardFocusManager
 
 /**
- * Action to switch to the previous terminal tab with wrap-around.
+ * Action to switch to the previous terminal tab.
  */
 class PreviousTerminalTabAction : AnAction(
     "Terminal Manager: Previous Tab",
@@ -21,16 +28,31 @@ class PreviousTerminalTabAction : AnAction(
         val toolWindow = ToolWindowManager.getInstance(project)
             .getToolWindow(TerminalToolWindowFactory.TOOL_WINDOW_ID) ?: return
 
-        val contentManager = toolWindow.contentManager
-        val contents = contentManager.contents
+        toolWindow.activate {
+            val actionManager = ActionManager.getInstance()
+            // Try multiple action IDs - Terminal.PreviousTab was used in classic terminal,
+            // but reworked terminal (2025.x) uses different IDs
+            val actionIds = listOf("Terminal.PreviousTab", "PreviousTab", "ActivatePreviousTab", "ToolWindowSelectPreviousContent")
 
-        if (contents.isEmpty()) return
+            var action: AnAction? = null
+            for (id in actionIds) {
+                action = actionManager.getAction(id)
+                if (action != null) break
+            }
 
-        val currentContent = contentManager.selectedContent
-        val currentIndex = contents.indexOf(currentContent)
-        val newIndex = if (currentIndex <= 0) contents.size - 1 else currentIndex - 1
+            if (action == null) return@activate
 
-        contentManager.setSelectedContent(contents[newIndex])
+            val focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().focusOwner
+                ?: toolWindow.component
+            val baseContext = DataManager.getInstance().getDataContext(focusOwner)
+            val context = SimpleDataContext.builder()
+                .setParent(baseContext)
+                .add(CommonDataKeys.PROJECT, project)
+                .build()
+
+            val event = AnActionEvent.createEvent(action, context, null, ActionPlaces.TOOLWINDOW_CONTENT, ActionUiKind.NONE, null)
+            action.actionPerformed(event)
+        }
     }
 
     override fun update(e: AnActionEvent) {
@@ -38,7 +60,6 @@ class PreviousTerminalTabAction : AnAction(
         val toolWindow = project?.let {
             ToolWindowManager.getInstance(it).getToolWindow(TerminalToolWindowFactory.TOOL_WINDOW_ID)
         }
-        val hasMultipleTabs = toolWindow?.contentManager?.contents?.let { it.size > 1 } ?: false
-        e.presentation.isEnabled = project != null && hasMultipleTabs
+        e.presentation.isEnabled = project != null && toolWindow != null && toolWindow.isAvailable
     }
 }

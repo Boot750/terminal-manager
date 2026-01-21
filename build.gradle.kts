@@ -3,7 +3,7 @@ import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.1.10"
-    id("org.jetbrains.intellij.platform") version "2.2.1"
+    id("org.jetbrains.intellij.platform") version "2.10.5"
 }
 
 group = "org.nanoya"
@@ -25,7 +25,7 @@ kotlin {
 
 dependencies {
     intellijPlatform {
-        intellijIdeaCommunity("2024.3.2")
+        intellijIdeaUltimate("2025.3.1")
         bundledPlugin("org.jetbrains.plugins.terminal")
 
         // Plugin Verifier - test against multiple IDE versions
