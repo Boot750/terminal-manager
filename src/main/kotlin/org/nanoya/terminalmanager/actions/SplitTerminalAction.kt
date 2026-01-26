@@ -1,15 +1,11 @@
 package org.nanoya.terminalmanager.actions
 
 import com.intellij.icons.AllIcons
-import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.ActionUiKind
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.wm.ToolWindowManager
 import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
@@ -80,24 +76,13 @@ abstract class SplitTerminalAction(
             val component = focusOwner ?: toolWindow.component
             LOG.info("Using component: ${component.javaClass.name}")
 
-            // Get data context from the focused component
-            val baseContext = DataManager.getInstance().getDataContext(component)
-            LOG.info("Base context: ${baseContext.javaClass.name}")
-
-            // Build context with project
-            val context = SimpleDataContext.builder()
-                .setParent(baseContext)
-                .add(CommonDataKeys.PROJECT, project)
-                .build()
-
-            // Execute the action directly without checking if enabled
-            LOG.info("Calling actionPerformed on ${resolvedAction.javaClass.name} for action $usedActionId")
-            val event = AnActionEvent.createEvent(resolvedAction, context, null, ActionPlaces.TOOLWINDOW_CONTENT, ActionUiKind.NONE, null)
+            // Execute the action using the proper API
+            LOG.info("Executing action $usedActionId via tryToExecute")
             try {
-                resolvedAction.actionPerformed(event)
-                LOG.info("actionPerformed completed successfully")
+                ActionManager.getInstance().tryToExecute(resolvedAction, null, component, ActionPlaces.TOOLWINDOW_CONTENT, true)
+                LOG.info("tryToExecute completed successfully")
             } catch (ex: Exception) {
-                LOG.error("actionPerformed threw exception", ex)
+                LOG.error("tryToExecute threw exception", ex)
             }
         }
     }
