@@ -33,6 +33,8 @@
         <li>Alt+Shift+U: Unsplit, Alt+Ctrl+Shift+U: Unsplit All</li>
         <li>Alt+Shift+'/;: Navigate to Next/Previous split pane</li>
     </ul>
+    <em>Note: Terminal split/group handling is experimental and built for the Reworked Terminal engine in IntelliJ 2025.
+    These features may not work correctly with the classic terminal engine.</em>
     <b>1.1.0</b>
     <ul>
         <li>Added keyboard shortcuts to switch terminal tabs (Alt+Shift+1-9)</li>

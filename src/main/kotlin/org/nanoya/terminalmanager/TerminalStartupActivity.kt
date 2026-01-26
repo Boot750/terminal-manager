@@ -96,10 +96,9 @@ class TerminalStartupActivity : ProjectActivity {
         tabName: String
     ) {
         // Wait for terminal to initialize before sending command
-        Timer().schedule(500) {
+        Timer().schedule(1000) {
             ApplicationManager.getApplication().invokeLater {
                 try {
-                    // Find the terminal widget by tab name and execute command
                     val toolWindow = terminalManager.toolWindow ?: return@invokeLater
                     val contentManager = toolWindow.contentManager
                     val content = contentManager.contents.find { it.displayName == tabName }
