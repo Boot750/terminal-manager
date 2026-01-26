@@ -9,12 +9,16 @@ import com.intellij.openapi.ui.MessageDialogBuilder
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.content.ContentManager
+import org.jetbrains.plugins.terminal.ShellTerminalWidget
 import org.jetbrains.plugins.terminal.TerminalTabState
 import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
 import org.jetbrains.plugins.terminal.TerminalToolWindowManager
 import org.nanoya.terminalmanager.settings.TerminalManagerSettings
 import org.nanoya.terminalmanager.settings.TerminalTabConfig
+import org.nanoya.terminalmanager.settings.TrustedProjectsSettings
 import java.io.File
+import java.util.Timer
+import kotlin.concurrent.schedule
 
 class ResetTerminalsAction : AnAction(
     "Reset Terminals",
@@ -59,6 +63,10 @@ class ResetTerminalsAction : AnAction(
     private fun resetTerminals(project: com.intellij.openapi.project.Project, settings: TerminalManagerSettings) {
         val enabledTabs = settings.tabs.filter { it.enabled }
 
+        // Check if project is trusted for running startup commands
+        val trustedSettings = TrustedProjectsSettings.getInstance()
+        val canRunCommands = trustedSettings.isProjectTrusted(project)
+
         ApplicationManager.getApplication().invokeLater {
             val toolWindowManager = ToolWindowManager.getInstance(project)
             val terminalToolWindow = toolWindowManager.getToolWindow(TerminalToolWindowFactory.TOOL_WINDOW_ID)
@@ -72,7 +80,7 @@ class ResetTerminalsAction : AnAction(
 
                     // Reopen configured terminals
                     enabledTabs.forEach { tabConfig ->
-                        createTerminalTab(terminalManager, tabConfig, project)
+                        createTerminalTab(terminalManager, tabConfig, project, canRunCommands)
                     }
                 }
             }
@@ -89,7 +97,8 @@ class ResetTerminalsAction : AnAction(
     private fun createTerminalTab(
         terminalManager: TerminalToolWindowManager,
         tabConfig: TerminalTabConfig,
-        project: com.intellij.openapi.project.Project
+        project: com.intellij.openapi.project.Project,
+        canRunCommands: Boolean
     ) {
         val workingDir = resolveWorkingDirectory(tabConfig.workingDirectory, project)
         val shellInfo = tabConfig.getShellInfo()
@@ -103,6 +112,38 @@ class ResetTerminalsAction : AnAction(
         }
 
         terminalManager.createNewSession(terminalManager.terminalRunner, tabState)
+
+        // Execute startup command if configured and project is trusted
+        if (canRunCommands && tabConfig.startupCommand.isNotBlank()) {
+            executeStartupCommand(terminalManager, tabConfig.startupCommand, tabConfig.name)
+        }
+    }
+
+    private fun executeStartupCommand(
+        terminalManager: TerminalToolWindowManager,
+        command: String,
+        tabName: String
+    ) {
+        // Wait for terminal to initialize before sending command
+        Timer().schedule(500) {
+            ApplicationManager.getApplication().invokeLater {
+                try {
+                    // Find the terminal widget by tab name and execute command
+                    val toolWindow = terminalManager.toolWindow ?: return@invokeLater
+                    val contentManager = toolWindow.contentManager
+                    val content = contentManager.contents.find { it.displayName == tabName }
+
+                    content?.let {
+                        val widget = TerminalToolWindowManager.getWidgetByContent(it)
+                        if (widget is ShellTerminalWidget) {
+                            widget.executeCommand(command)
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Silently ignore errors - command execution is best-effort
+                }
+            }
+        }
     }
 
     private fun resolveWorkingDirectory(configuredDir: String, project: com.intellij.openapi.project.Project): String {

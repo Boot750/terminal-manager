@@ -146,9 +146,10 @@ data class TerminalTabConfig(
     var name: String = "Terminal",
     var shellId: String = "default",
     var workingDirectory: String = "",
-    var enabled: Boolean = true
+    var enabled: Boolean = true,
+    var startupCommand: String = ""
 ) {
-    fun copy(): TerminalTabConfig = TerminalTabConfig(name, shellId, workingDirectory, enabled)
+    fun copy(): TerminalTabConfig = TerminalTabConfig(name, shellId, workingDirectory, enabled, startupCommand)
 
     fun getShellInfo(): ShellInfo? {
         return ShellDetector.getAvailableShells().find { it.id == shellId }

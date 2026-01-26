@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>org.nanoya.terminal-manager</id>
     <name>Terminal Manager</name>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <vendor email="support@nanoya.org" url="https://github.com/nanoya">Nanoya</vendor>
 
     <description><![CDATA[
@@ -12,6 +12,9 @@
         <li>Configure multiple terminal tabs to open automatically on project startup</li>
         <li>Choose shell type per tab (PowerShell, WSL/Ubuntu, CMD, Git Bash, etc.)</li>
         <li>Set custom working directories (relative to project root)</li>
+        <li>Run startup commands when terminals open (with security-focused opt-in trust model)</li>
+        <li>Split terminals with easy keyboard shortcuts (Alt+Shift+V/H)</li>
+        <li>Navigate between splits (Alt+Shift+N/P) and unsplit (Alt+Shift+U)</li>
         <li>Name your terminal tabs for easy identification</li>
         <li>Reorder tabs with up/down controls</li>
         <li>Per-project configuration stored in <code>.terminals/startup-terminals.json</code></li>
@@ -19,6 +22,19 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <b>1.2.0</b>
+    <ul>
+        <li>Added startup commands - execute a command when terminal opens</li>
+        <li>Security-focused opt-in model: commands only run if project is explicitly trusted</li>
+        <li>Trust setting stored locally per-machine, not in project config</li>
+        <li>Warning banner in settings when commands exist but project isn't trusted</li>
+        <li>Added terminal split shortcuts with easy-to-remember keys:</li>
+        <li>Alt+Shift+V: Split Right, Alt+Shift+H: Split Down</li>
+        <li>Alt+Shift+U: Unsplit, Alt+Ctrl+Shift+U: Unsplit All</li>
+        <li>Alt+Shift+'/;: Navigate to Next/Previous split pane</li>
+    </ul>
+    <em>Note: Terminal split/group handling is experimental and built for the Reworked Terminal engine in IntelliJ 2025.
+    These features may not work correctly with the classic terminal engine.</em>
     <b>1.1.0</b>
     <ul>
         <li>Added keyboard shortcuts to switch terminal tabs (Alt+Shift+1-9)</li>
@@ -43,7 +59,15 @@
     <depends>org.jetbrains.plugins.terminal</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="org.nanoya.terminalmanager.settings.TrustedProjectsSettings"/>
+        <applicationService serviceImplementation="org.nanoya.terminalmanager.settings.TerminalManagerAppSettings"/>
         <projectService serviceImplementation="org.nanoya.terminalmanager.settings.TerminalManagerSettings"/>
+
+        <applicationConfigurable
+                parentId="tools"
+                instance="org.nanoya.terminalmanager.settings.TerminalManagerAppConfigurable"
+                id="org.nanoya.terminalmanager.settings.TerminalManagerAppConfigurable"
+                displayName="Terminal Manager"/>
 
         <projectConfigurable
                 parentId="tools"
@@ -140,6 +164,62 @@
                 text="Terminal Manager: Previous Tab"
                 description="Switch to the previous terminal tab">
             <keyboard-shortcut keymap="$default" first-keystroke="alt shift OPEN_BRACKET"/>
+        </action>
+
+        <!-- Terminal split actions -->
+        <action id="TerminalManager.SplitRight"
+                class="org.nanoya.terminalmanager.actions.SplitTerminalRightAction"
+                text="Terminal Manager: Split Right"
+                description="Split the current terminal to the right"
+                icon="AllIcons.Actions.SplitVertically">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt shift V"/>
+        </action>
+        <action id="TerminalManager.SplitDown"
+                class="org.nanoya.terminalmanager.actions.SplitTerminalDownAction"
+                text="Terminal Manager: Split Down"
+                description="Split the current terminal downward"
+                icon="AllIcons.Actions.SplitHorizontally">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt shift H"/>
+        </action>
+        <action id="TerminalManager.MoveRight"
+                class="org.nanoya.terminalmanager.actions.MoveTerminalRightAction"
+                text="Terminal Manager: Move to Right Split"
+                description="Move the current terminal to a split on the right"
+                icon="AllIcons.Actions.SplitVertically">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt ctrl shift V"/>
+        </action>
+        <action id="TerminalManager.MoveDown"
+                class="org.nanoya.terminalmanager.actions.MoveTerminalDownAction"
+                text="Terminal Manager: Move to Bottom Split"
+                description="Move the current terminal to a split below"
+                icon="AllIcons.Actions.SplitHorizontally">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt ctrl shift H"/>
+        </action>
+        <action id="TerminalManager.Unsplit"
+                class="org.nanoya.terminalmanager.actions.UnsplitTerminalAction"
+                text="Terminal Manager: Unsplit"
+                description="Remove the current terminal split"
+                icon="AllIcons.General.CollapseComponent">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt shift U"/>
+        </action>
+        <action id="TerminalManager.UnsplitAll"
+                class="org.nanoya.terminalmanager.actions.UnsplitAllTerminalsAction"
+                text="Terminal Manager: Unsplit All"
+                description="Remove all terminal splits"
+                icon="AllIcons.General.CollapseComponent">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt ctrl shift U"/>
+        </action>
+        <action id="TerminalManager.GotoNextSplit"
+                class="org.nanoya.terminalmanager.actions.GotoNextSplitAction"
+                text="Terminal Manager: Go to Next Split"
+                description="Navigate to the next terminal split pane">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt shift QUOTE"/>
+        </action>
+        <action id="TerminalManager.GotoPreviousSplit"
+                class="org.nanoya.terminalmanager.actions.GotoPreviousSplitAction"
+                text="Terminal Manager: Go to Previous Split"
+                description="Navigate to the previous terminal split pane">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt shift SEMICOLON"/>
         </action>
     </actions>
 </idea-plugin>
