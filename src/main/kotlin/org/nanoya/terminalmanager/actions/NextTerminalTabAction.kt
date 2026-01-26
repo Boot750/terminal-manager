@@ -1,14 +1,10 @@
 package org.nanoya.terminalmanager.actions
 
-import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionPlaces
-import com.intellij.openapi.actionSystem.ActionUiKind
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.wm.ToolWindowManager
 import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
 import java.awt.KeyboardFocusManager
@@ -44,14 +40,8 @@ class NextTerminalTabAction : AnAction(
 
             val focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().focusOwner
                 ?: toolWindow.component
-            val baseContext = DataManager.getInstance().getDataContext(focusOwner)
-            val context = SimpleDataContext.builder()
-                .setParent(baseContext)
-                .add(CommonDataKeys.PROJECT, project)
-                .build()
 
-            val event = AnActionEvent.createEvent(action, context, null, ActionPlaces.TOOLWINDOW_CONTENT, ActionUiKind.NONE, null)
-            action.actionPerformed(event)
+            actionManager.tryToExecute(action, null, focusOwner, ActionPlaces.TOOLWINDOW_CONTENT, true)
         }
     }
 
