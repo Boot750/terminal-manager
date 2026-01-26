@@ -9,6 +9,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Free Disk Space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+
       - uses: actions/checkout@v4
 
       - name: Setup Java
@@ -59,6 +65,12 @@ jobs:
           - { type: "RR", name: "RustRover" }
     name: Verify (${{ matrix.ide.name }})
     steps:
+      - name: Free Disk Space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+
       - uses: actions/checkout@v4
 
       - name: Setup Java
