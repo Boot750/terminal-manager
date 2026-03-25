@@ -13,6 +13,7 @@ import org.jetbrains.plugins.terminal.ShellTerminalWidget
 import org.jetbrains.plugins.terminal.TerminalTabState
 import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
 import org.jetbrains.plugins.terminal.TerminalToolWindowManager
+import org.nanoya.terminalmanager.settings.TerminalManagerConfig
 import org.nanoya.terminalmanager.settings.TerminalManagerSettings
 import org.nanoya.terminalmanager.settings.TerminalTabConfig
 import org.nanoya.terminalmanager.settings.TrustedProjectsSettings
@@ -30,8 +31,9 @@ class ResetTerminalsAction : AnAction(
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
         val settings = TerminalManagerSettings.getInstance(project)
+        val effectiveConfig = settings.getEffectiveConfig()
 
-        if (!settings.skipResetConfirmation) {
+        if (!effectiveConfig.skipResetConfirmation) {
             val result = MessageDialogBuilder.yesNo(
                 "Reset Terminals",
                 "This will close all terminal tabs and reopen the configured startup terminals.\n\nDo you want to continue?"
@@ -57,11 +59,11 @@ class ResetTerminalsAction : AnAction(
             }
         }
 
-        resetTerminals(project, settings)
+        resetTerminals(project, effectiveConfig)
     }
 
-    private fun resetTerminals(project: com.intellij.openapi.project.Project, settings: TerminalManagerSettings) {
-        val enabledTabs = settings.tabs.filter { it.enabled }
+    private fun resetTerminals(project: com.intellij.openapi.project.Project, effectiveConfig: TerminalManagerConfig) {
+        val enabledTabs = effectiveConfig.tabs.filter { it.enabled }
 
         // Check if project is trusted for running startup commands
         val trustedSettings = TrustedProjectsSettings.getInstance()

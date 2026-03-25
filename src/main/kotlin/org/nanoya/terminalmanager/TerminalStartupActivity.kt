@@ -20,12 +20,13 @@ class TerminalStartupActivity : ProjectActivity {
 
     override suspend fun execute(project: Project) {
         val settings = TerminalManagerSettings.getInstance(project)
+        val effectiveConfig = settings.getEffectiveConfig()
 
-        if (!settings.enabled || settings.tabs.isEmpty()) {
+        if (!effectiveConfig.enabled || effectiveConfig.tabs.isEmpty()) {
             return
         }
 
-        val enabledTabs = settings.tabs.filter { it.enabled }
+        val enabledTabs = effectiveConfig.tabs.filter { it.enabled }
         if (enabledTabs.isEmpty()) {
             return
         }
@@ -43,7 +44,7 @@ class TerminalStartupActivity : ProjectActivity {
                     val terminalManager = TerminalToolWindowManager.getInstance(project)
 
                     // Close existing terminals if option is enabled
-                    if (settings.closeExistingTerminals) {
+                    if (effectiveConfig.closeExistingTerminals) {
                         closeAllTerminalTabs(toolWindow.contentManager)
                     }
 

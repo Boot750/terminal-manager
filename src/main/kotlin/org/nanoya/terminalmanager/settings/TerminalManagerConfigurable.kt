@@ -26,6 +26,7 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
     private var tableModel: TerminalTabTableModel? = null
     private var table: JBTable? = null
     private var trustBannerPanel: JPanel? = null
+    private var localOverrideBannerPanel: JPanel? = null
 
     override fun getDisplayName(): String = "Startup Terminals"
 
@@ -40,6 +41,9 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
 
         // Create trust warning banner
         trustBannerPanel = createTrustBannerPanel(trustedSettings)
+
+        // Create local override info banner
+        localOverrideBannerPanel = createLocalOverrideBannerPanel(settings)
 
         enabledCheckbox = JBCheckBox("Open terminals on project startup", settings.enabled)
         closeExistingCheckbox = JBCheckBox("Close existing terminal tabs first", settings.closeExistingTerminals)
@@ -97,7 +101,8 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
         val helpLabel = JBLabel(
             "<html>Working directory is relative to project root. Leave blank for project root.<br>" +
             "Startup command runs after the terminal initializes (requires trust).<br>" +
-            "Config stored in: <code>.terminals/startup-terminals.json</code></html>"
+            "Config stored in: <code>.terminals/startup-terminals.json</code><br>" +
+            "Local overrides: <code>.terminals/startup-terminals.local.json</code> (add to .gitignore)</html>"
         )
 
         val centerPanel = JPanel(BorderLayout(0, 5)).apply {
@@ -106,9 +111,13 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
             add(helpLabel, BorderLayout.SOUTH)
         }
 
-        // Wrap top panel with trust banner
+        // Wrap top panel with banners
         val headerPanel = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
+            if (localOverrideBannerPanel != null) {
+                add(localOverrideBannerPanel)
+                add(Box.createVerticalStrut(10))
+            }
             if (trustBannerPanel != null) {
                 add(trustBannerPanel)
                 add(Box.createVerticalStrut(10))
@@ -149,6 +158,26 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
         panel.add(warningLabel, BorderLayout.CENTER)
         panel.add(enableButton, BorderLayout.EAST)
 
+        return panel
+    }
+
+    private fun createLocalOverrideBannerPanel(settings: TerminalManagerSettings): JPanel {
+        val panel = JPanel(BorderLayout(10, 0)).apply {
+            background = JBColor(0xD1ECF1, 0x1A3A4A)
+            border = BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(JBColor(0xBEE5EB, 0x2A5A6A)),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)
+            )
+            isVisible = settings.hasLocalOverrides()
+        }
+
+        val infoLabel = JBLabel(
+            "<html><b>Local overrides are active.</b> " +
+            "Settings from <code>startup-terminals.local.json</code> are merged on top of the base config at runtime. " +
+            "This panel edits the base config only.</html>"
+        )
+
+        panel.add(infoLabel, BorderLayout.CENTER)
         return panel
     }
 
@@ -201,6 +230,7 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
         tableModel = null
         table = null
         trustBannerPanel = null
+        localOverrideBannerPanel = null
     }
 }
 
