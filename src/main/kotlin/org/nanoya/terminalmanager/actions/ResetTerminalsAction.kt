@@ -13,6 +13,7 @@ import org.jetbrains.plugins.terminal.ShellTerminalWidget
 import org.jetbrains.plugins.terminal.TerminalTabState
 import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
 import org.jetbrains.plugins.terminal.TerminalToolWindowManager
+import org.nanoya.terminalmanager.settings.TabColorIcon
 import org.nanoya.terminalmanager.settings.TerminalManagerConfig
 import org.nanoya.terminalmanager.settings.TerminalManagerSettings
 import org.nanoya.terminalmanager.settings.TerminalTabConfig
@@ -115,10 +116,23 @@ class ResetTerminalsAction : AnAction(
 
         terminalManager.createNewSession(terminalManager.terminalRunner, tabState)
 
+        // Apply color icon to the tab
+        applyTabColor(terminalManager, tabConfig)
+
         // Execute startup command if configured and project is trusted
         if (canRunCommands && tabConfig.startupCommand.isNotBlank()) {
             executeStartupCommand(terminalManager, tabConfig.startupCommand, tabConfig.name)
         }
+    }
+
+    private fun applyTabColor(terminalManager: TerminalToolWindowManager, tabConfig: TerminalTabConfig) {
+        val tabColor = tabConfig.getTabColor()
+        val awtColor = tabColor.awtColor ?: return
+
+        val toolWindow = terminalManager.toolWindow ?: return
+        val contentManager = toolWindow.contentManager
+        val content = contentManager.contents.find { it.displayName == tabConfig.name }
+        content?.icon = TabColorIcon(awtColor)
     }
 
     private fun executeStartupCommand(

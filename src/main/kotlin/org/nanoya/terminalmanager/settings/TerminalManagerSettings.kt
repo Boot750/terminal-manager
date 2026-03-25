@@ -1,7 +1,6 @@
 package org.nanoya.terminalmanager.settings
 
 import com.google.gson.GsonBuilder
-import com.google.gson.reflect.TypeToken
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -110,7 +109,8 @@ class TerminalManagerSettings(private val project: Project) {
                     shellId = localOverride.shellId ?: baseTab.shellId,
                     workingDirectory = localOverride.workingDirectory ?: baseTab.workingDirectory,
                     enabled = localOverride.enabled ?: baseTab.enabled,
-                    startupCommand = localOverride.startupCommand ?: baseTab.startupCommand
+                    startupCommand = localOverride.startupCommand ?: baseTab.startupCommand,
+                    color = localOverride.color ?: baseTab.color
                 ))
             } else {
                 result.add(baseTab.copy())
@@ -125,7 +125,8 @@ class TerminalManagerSettings(private val project: Project) {
                     shellId = localTab.shellId ?: "default",
                     workingDirectory = localTab.workingDirectory ?: "",
                     enabled = localTab.enabled ?: true,
-                    startupCommand = localTab.startupCommand ?: ""
+                    startupCommand = localTab.startupCommand ?: "",
+                    color = localTab.color ?: ""
                 ))
             }
         }
@@ -170,5 +171,6 @@ data class LocalTerminalTabOverride(
     val shellId: String? = null,
     val workingDirectory: String? = null,
     val enabled: Boolean? = null,
-    val startupCommand: String? = null
+    val startupCommand: String? = null,
+    val color: String? = null
 )

@@ -15,6 +15,7 @@
         <li>Run startup commands when terminals open (with security-focused opt-in trust model)</li>
         <li>Split terminals with easy keyboard shortcuts (Alt+Shift+V/H)</li>
         <li>Navigate between splits (Alt+Shift+N/P) and unsplit (Alt+Shift+U)</li>
+        <li>Color-code your terminal tabs for easy visual identification</li>
         <li>Name your terminal tabs for easy identification</li>
         <li>Reorder tabs with up/down controls</li>
         <li>Per-project configuration stored in <code>.terminals/startup-terminals.json</code></li>
@@ -29,6 +30,7 @@
         <li>Local overrides use nullable fields — only specified values replace the base config</li>
         <li>Tabs matched by name: override specific tab properties without redefining the entire config</li>
         <li>Info banner in settings UI when local overrides are active</li>
+        <li>Tab color coding: assign colors (red, green, blue, yellow, orange, purple, cyan, pink) to terminal tabs for easy identification</li>
     </ul>
     <b>1.2.0</b>
     <ul>
