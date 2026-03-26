@@ -79,7 +79,7 @@ intellijPlatform {
 tasks {
     patchPluginXml {
         sinceBuild.set("243")
-        untilBuild.set("253.*")
+        untilBuild.set("261.*")
     }
     // Skip searchable options to avoid Gradle plugin Java 25 bug
     buildSearchableOptions {

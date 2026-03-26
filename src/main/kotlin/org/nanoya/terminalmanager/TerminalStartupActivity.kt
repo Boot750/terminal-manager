@@ -9,7 +9,6 @@ import org.jetbrains.plugins.terminal.ShellTerminalWidget
 import org.jetbrains.plugins.terminal.TerminalTabState
 import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
 import org.jetbrains.plugins.terminal.TerminalToolWindowManager
-import org.nanoya.terminalmanager.settings.TabColorIcon
 import org.nanoya.terminalmanager.settings.TerminalManagerSettings
 import org.nanoya.terminalmanager.settings.TerminalTabConfig
 import org.nanoya.terminalmanager.settings.TrustedProjectsSettings
@@ -99,10 +98,15 @@ class TerminalStartupActivity : ProjectActivity {
         val tabColor = tabConfig.getTabColor()
         val awtColor = tabColor.awtColor ?: return
 
-        val toolWindow = terminalManager.toolWindow ?: return
-        val contentManager = toolWindow.contentManager
-        val content = contentManager.contents.find { it.displayName == tabConfig.name }
-        content?.icon = TabColorIcon(awtColor)
+        // Delay to allow createNewSession() to register the tab in the content manager
+        Timer().schedule(500) {
+            ApplicationManager.getApplication().invokeLater {
+                val toolWindow = terminalManager.toolWindow ?: return@invokeLater
+                val contentManager = toolWindow.contentManager
+                val content = contentManager.contents.find { it.displayName == tabConfig.name }
+                content?.setTabColor(awtColor)
+            }
+        }
     }
 
     private fun executeStartupCommand(
