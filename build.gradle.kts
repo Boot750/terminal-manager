@@ -45,10 +45,10 @@ intellijPlatform {
         ))
 
         // IDE is specified via command line property for matrix CI builds
-        // Usage: ./gradlew verifyPlugin -PverifyIdeType=IC -PverifyIdeVersion=2024.3.2
+        // Usage: ./gradlew verifyPlugin -PverifyIdeType=IC -PverifyIdeVersion=2025.1
         ides {
             val ideType = providers.gradleProperty("verifyIdeType").orNull
-            val ideVersion = providers.gradleProperty("verifyIdeVersion").orNull ?: "2024.3.2"
+            val ideVersion = providers.gradleProperty("verifyIdeVersion").orNull ?: "2025.1"
 
             if (ideType != null) {
                 // Single IDE from CI matrix
@@ -78,7 +78,7 @@ intellijPlatform {
 
 tasks {
     patchPluginXml {
-        sinceBuild.set("243")
+        sinceBuild.set("251")
         untilBuild.set("261.*")
     }
     // Skip searchable options to avoid Gradle plugin Java 25 bug
