@@ -3,7 +3,7 @@ import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.1.10"
-    id("org.jetbrains.intellij.platform") version "2.11.0"
+    id("org.jetbrains.intellij.platform") version "2.13.1"
 }
 
 group = "org.nanoya"
@@ -28,8 +28,8 @@ dependencies {
         intellijIdeaUltimate("2025.3.1")
         bundledPlugin("org.jetbrains.plugins.terminal")
 
-        // Plugin Verifier - pinned to 1.401 for RustRover V2 plugin model support
-        pluginVerifier("1.401")
+        // Plugin Verifier - test against multiple IDE versions
+        pluginVerifier()
     }
     compileOnly("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("com.google.code.gson:gson:2.11.0")
