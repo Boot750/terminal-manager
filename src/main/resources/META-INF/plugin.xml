@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>org.nanoya.terminal-manager</id>
     <name>Terminal Manager</name>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
     <vendor email="support@nanoya.org" url="https://github.com/nanoya">Nanoya</vendor>
 
     <description><![CDATA[
@@ -15,13 +15,24 @@
         <li>Run startup commands when terminals open (with security-focused opt-in trust model)</li>
         <li>Split terminals with easy keyboard shortcuts (Alt+Shift+V/H)</li>
         <li>Navigate between splits (Alt+Shift+N/P) and unsplit (Alt+Shift+U)</li>
+        <li>Color-code your terminal tabs for easy visual identification</li>
         <li>Name your terminal tabs for easy identification</li>
         <li>Reorder tabs with up/down controls</li>
         <li>Per-project configuration stored in <code>.terminals/startup-terminals.json</code></li>
+        <li>Local overrides via <code>.terminals/startup-terminals.local.json</code> (gitignore-friendly)</li>
     </ul>
     ]]></description>
 
     <change-notes><![CDATA[
+    <b>1.3.0</b>
+    <ul>
+        <li>Added local config overrides: create <code>.terminals/startup-terminals.local.json</code> to override individual settings from the shared config</li>
+        <li>Local overrides use nullable fields — only specified values replace the base config</li>
+        <li>Tabs matched by name: override specific tab properties without redefining the entire config</li>
+        <li>Info banner in settings UI when local overrides are active</li>
+        <li>Tab color coding: assign colors (red, green, blue, yellow, orange, purple, cyan, pink) to terminal tabs for easy identification</li>
+        <li>Now supports IDE versions from 2025.1 up to 2026.1</li>
+    </ul>
     <b>1.2.0</b>
     <ul>
         <li>Added startup commands - execute a command when terminal opens</li>

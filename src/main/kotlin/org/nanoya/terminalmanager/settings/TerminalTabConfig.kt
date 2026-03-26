@@ -1,6 +1,13 @@
 package org.nanoya.terminalmanager.settings
 
+import com.intellij.ui.JBColor
+import java.awt.Color
+import java.awt.Component
+import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.RenderingHints
 import java.io.File
+import javax.swing.Icon
 
 data class ShellInfo(
     val id: String,
@@ -147,11 +154,49 @@ data class TerminalTabConfig(
     var shellId: String = "default",
     var workingDirectory: String = "",
     var enabled: Boolean = true,
-    var startupCommand: String = ""
+    var startupCommand: String = "",
+    var color: String = ""
 ) {
-    fun copy(): TerminalTabConfig = TerminalTabConfig(name, shellId, workingDirectory, enabled, startupCommand)
+    fun copy(): TerminalTabConfig = TerminalTabConfig(name, shellId, workingDirectory, enabled, startupCommand, color)
 
     fun getShellInfo(): ShellInfo? {
         return ShellDetector.getAvailableShells().find { it.id == shellId }
     }
+
+    fun getTabColor(): TabColor {
+        return TabColor.fromId(color)
+    }
+}
+
+enum class TabColor(val id: String, val displayName: String, val awtColor: Color?) {
+    NONE("", "None", null),
+    RED("red", "Red", JBColor.RED),
+    GREEN("green", "Green", JBColor.GREEN),
+    BLUE("blue", "Blue", JBColor.BLUE),
+    YELLOW("yellow", "Yellow", JBColor.YELLOW),
+    ORANGE("orange", "Orange", JBColor.ORANGE),
+    PURPLE("purple", "Purple", JBColor.magenta),
+    CYAN("cyan", "Cyan", JBColor.CYAN),
+    PINK("pink", "Pink", JBColor.PINK),;
+
+    override fun toString(): String = displayName
+
+    companion object {
+        fun fromId(id: String): TabColor {
+            return entries.find { it.id == id } ?: NONE
+        }
+    }
+}
+
+class TabColorIcon(private val color: Color, private val size: Int = 12) : Icon {
+    override fun paintIcon(c: Component?, g: Graphics, x: Int, y: Int) {
+        val g2 = g.create() as Graphics2D
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+        g2.color = color
+        g2.fillOval(x, y, size, size)
+        g2.dispose()
+    }
+
+    override fun getIconWidth(): Int = size
+    override fun getIconHeight(): Int = size
 }

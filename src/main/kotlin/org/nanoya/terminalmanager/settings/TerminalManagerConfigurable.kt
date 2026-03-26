@@ -26,6 +26,7 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
     private var tableModel: TerminalTabTableModel? = null
     private var table: JBTable? = null
     private var trustBannerPanel: JPanel? = null
+    private var localOverrideBannerPanel: JPanel? = null
 
     override fun getDisplayName(): String = "Startup Terminals"
 
@@ -41,6 +42,9 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
         // Create trust warning banner
         trustBannerPanel = createTrustBannerPanel(trustedSettings)
 
+        // Create local override info banner
+        localOverrideBannerPanel = createLocalOverrideBannerPanel(settings)
+
         enabledCheckbox = JBCheckBox("Open terminals on project startup", settings.enabled)
         closeExistingCheckbox = JBCheckBox("Close existing terminal tabs first", settings.closeExistingTerminals)
 
@@ -53,7 +57,8 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
             columnModel.getColumn(1).preferredWidth = 150  // Shell Type
             columnModel.getColumn(2).preferredWidth = 200  // Working Directory
             columnModel.getColumn(3).preferredWidth = 200  // Startup Command
-            columnModel.getColumn(4).preferredWidth = 60   // Enabled
+            columnModel.getColumn(4).preferredWidth = 80   // Color
+            columnModel.getColumn(5).preferredWidth = 60   // Enabled
 
             // Shell type dropdown
             columnModel.getColumn(1).cellEditor = ShellInfoCellEditor()
@@ -61,6 +66,10 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
 
             // Directory chooser
             columnModel.getColumn(2).cellEditor = DirectoryChooserCellEditor(project)
+
+            // Color dropdown
+            columnModel.getColumn(4).cellEditor = TabColorCellEditor()
+            columnModel.getColumn(4).cellRenderer = TabColorCellRenderer()
         }
 
         val decorator = ToolbarDecorator.createDecorator(table!!)
@@ -97,7 +106,8 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
         val helpLabel = JBLabel(
             "<html>Working directory is relative to project root. Leave blank for project root.<br>" +
             "Startup command runs after the terminal initializes (requires trust).<br>" +
-            "Config stored in: <code>.terminals/startup-terminals.json</code></html>"
+            "Config stored in: <code>.terminals/startup-terminals.json</code><br>" +
+            "Local overrides: <code>.terminals/startup-terminals.local.json</code> (add to .gitignore)</html>"
         )
 
         val centerPanel = JPanel(BorderLayout(0, 5)).apply {
@@ -106,9 +116,13 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
             add(helpLabel, BorderLayout.SOUTH)
         }
 
-        // Wrap top panel with trust banner
+        // Wrap top panel with banners
         val headerPanel = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
+            if (localOverrideBannerPanel != null) {
+                add(localOverrideBannerPanel)
+                add(Box.createVerticalStrut(10))
+            }
             if (trustBannerPanel != null) {
                 add(trustBannerPanel)
                 add(Box.createVerticalStrut(10))
@@ -152,6 +166,26 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
         return panel
     }
 
+    private fun createLocalOverrideBannerPanel(settings: TerminalManagerSettings): JPanel {
+        val panel = JPanel(BorderLayout(10, 0)).apply {
+            background = JBColor(0xD1ECF1, 0x1A3A4A)
+            border = BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(JBColor(0xBEE5EB, 0x2A5A6A)),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)
+            )
+            isVisible = settings.hasLocalOverrides()
+        }
+
+        val infoLabel = JBLabel(
+            "<html><b>Local overrides are active.</b> " +
+            "Settings from <code>startup-terminals.local.json</code> are merged on top of the base config at runtime. " +
+            "This panel edits the base config only.</html>"
+        )
+
+        panel.add(infoLabel, BorderLayout.CENTER)
+        return panel
+    }
+
     private fun updateTrustBannerVisibility() {
         val trustedSettings = TrustedProjectsSettings.getInstance()
         val hasStartupCommands = tableModel?.getTabs()?.any { it.startupCommand.isNotBlank() } ?: false
@@ -173,7 +207,8 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
             current.shellId != saved.shellId ||
             current.workingDirectory != saved.workingDirectory ||
             current.enabled != saved.enabled ||
-            current.startupCommand != saved.startupCommand
+            current.startupCommand != saved.startupCommand ||
+            current.color != saved.color
         }
     }
 
@@ -201,12 +236,13 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
         tableModel = null
         table = null
         trustBannerPanel = null
+        localOverrideBannerPanel = null
     }
 }
 
 class TerminalTabTableModel(private var tabs: MutableList<TerminalTabConfig>) : AbstractTableModel() {
 
-    private val columnNames = arrayOf("Name", "Shell", "Working Directory", "Startup Command", "Enabled")
+    private val columnNames = arrayOf("Name", "Shell", "Working Directory", "Startup Command", "Color", "Enabled")
 
     override fun getRowCount(): Int = tabs.size
 
@@ -216,7 +252,7 @@ class TerminalTabTableModel(private var tabs: MutableList<TerminalTabConfig>) : 
 
     override fun getColumnClass(columnIndex: Int): Class<*> {
         return when (columnIndex) {
-            4 -> java.lang.Boolean::class.java
+            5 -> java.lang.Boolean::class.java
             else -> String::class.java
         }
     }
@@ -230,7 +266,8 @@ class TerminalTabTableModel(private var tabs: MutableList<TerminalTabConfig>) : 
             1 -> tab.shellId
             2 -> tab.workingDirectory
             3 -> tab.startupCommand
-            4 -> tab.enabled
+            4 -> tab.color
+            5 -> tab.enabled
             else -> ""
         }
     }
@@ -242,7 +279,8 @@ class TerminalTabTableModel(private var tabs: MutableList<TerminalTabConfig>) : 
             1 -> tab.shellId = (aValue as? ShellInfo)?.id ?: (aValue as? String) ?: "default"
             2 -> tab.workingDirectory = aValue as? String ?: ""
             3 -> tab.startupCommand = aValue as? String ?: ""
-            4 -> tab.enabled = aValue as? Boolean ?: true
+            4 -> tab.color = (aValue as? TabColor)?.id ?: (aValue as? String) ?: ""
+            5 -> tab.enabled = aValue as? Boolean ?: true
         }
         fireTableCellUpdated(rowIndex, columnIndex)
     }
@@ -382,5 +420,71 @@ class DirectoryChooserCellEditor(private val project: Project) : AbstractCellEdi
     ): Component {
         textField.text = value as? String ?: ""
         return panel
+    }
+}
+
+class TabColorCellEditor : AbstractCellEditor(), TableCellEditor {
+    private val comboBox: JComboBox<TabColor>
+
+    init {
+        comboBox = JComboBox(TabColor.entries.toTypedArray())
+        comboBox.renderer = object : DefaultListCellRenderer() {
+            override fun getListCellRendererComponent(
+                list: JList<*>?,
+                value: Any?,
+                index: Int,
+                isSelected: Boolean,
+                cellHasFocus: Boolean
+            ): Component {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
+                val tabColor = value as? TabColor
+                text = tabColor?.displayName ?: ""
+                icon = tabColor?.awtColor?.let { TabColorIcon(it) }
+                return this
+            }
+        }
+    }
+
+    override fun getCellEditorValue(): Any = comboBox.selectedItem ?: TabColor.NONE
+
+    override fun getTableCellEditorComponent(
+        table: JTable?,
+        value: Any?,
+        isSelected: Boolean,
+        row: Int,
+        column: Int
+    ): Component {
+        val colorId = value as? String ?: ""
+        comboBox.selectedItem = TabColor.fromId(colorId)
+        return comboBox
+    }
+}
+
+class TabColorCellRenderer : TableCellRenderer {
+    private val label = JLabel()
+
+    override fun getTableCellRendererComponent(
+        table: JTable?,
+        value: Any?,
+        isSelected: Boolean,
+        hasFocus: Boolean,
+        row: Int,
+        column: Int
+    ): Component {
+        val colorId = value as? String ?: ""
+        val tabColor = TabColor.fromId(colorId)
+        label.text = tabColor.displayName
+        label.icon = tabColor.awtColor?.let { TabColorIcon(it) }
+
+        if (isSelected) {
+            label.background = table?.selectionBackground
+            label.foreground = table?.selectionForeground
+            label.isOpaque = true
+        } else {
+            label.background = table?.background
+            label.foreground = table?.foreground
+            label.isOpaque = false
+        }
+        return label
     }
 }

@@ -3,11 +3,11 @@ import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.1.10"
-    id("org.jetbrains.intellij.platform") version "2.10.5"
+    id("org.jetbrains.intellij.platform") version "2.13.1"
 }
 
 group = "org.nanoya"
-version = "1.2.0"
+version = "1.3.0"
 
 repositories {
     mavenCentral()
@@ -45,10 +45,10 @@ intellijPlatform {
         ))
 
         // IDE is specified via command line property for matrix CI builds
-        // Usage: ./gradlew verifyPlugin -PverifyIdeType=IC -PverifyIdeVersion=2024.3.2
+        // Usage: ./gradlew verifyPlugin -PverifyIdeType=IC -PverifyIdeVersion=2025.1
         ides {
             val ideType = providers.gradleProperty("verifyIdeType").orNull
-            val ideVersion = providers.gradleProperty("verifyIdeVersion").orNull ?: "2024.3.2"
+            val ideVersion = providers.gradleProperty("verifyIdeVersion").orNull ?: "2025.1"
 
             if (ideType != null) {
                 // Single IDE from CI matrix
@@ -67,10 +67,10 @@ intellijPlatform {
                     "RR" -> IntelliJPlatformType.RustRover
                     else -> IntelliJPlatformType.IntellijIdeaCommunity
                 }
-                ide(platformType, ideVersion)
+                create(platformType, ideVersion)
             } else {
                 // Default: verify against primary IDE locally
-                ide(IntelliJPlatformType.IntellijIdeaCommunity, ideVersion)
+                create(IntelliJPlatformType.IntellijIdeaCommunity, ideVersion)
             }
         }
     }
@@ -78,8 +78,8 @@ intellijPlatform {
 
 tasks {
     patchPluginXml {
-        sinceBuild.set("243")
-        untilBuild.set("253.*")
+        sinceBuild.set("251")
+        untilBuild.set("261.*")
     }
     // Skip searchable options to avoid Gradle plugin Java 25 bug
     buildSearchableOptions {

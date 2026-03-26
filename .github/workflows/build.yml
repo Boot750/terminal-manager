@@ -62,8 +62,10 @@ jobs:
           - { type: "CL", name: "CLion" }
           - { type: "RD", name: "Rider" }
           - { type: "DG", name: "DataGrip" }
-          - { type: "RR", name: "RustRover" }
+          - { type: "RR", name: "RustRover", allow-failure: true }
     name: Verify (${{ matrix.ide.name }})
+    # RustRover: Plugin Verifier can't parse its non-standard IDE layout, allow failure until JetBrains fixes it
+    continue-on-error: ${{ matrix.ide.allow-failure == true }}
     steps:
       - name: Free Disk Space
         run: |

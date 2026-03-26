@@ -8,17 +8,12 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.ui.MessageDialogBuilder
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindowManager
-import com.intellij.ui.content.ContentManager
-import org.jetbrains.plugins.terminal.ShellTerminalWidget
-import org.jetbrains.plugins.terminal.TerminalTabState
 import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
 import org.jetbrains.plugins.terminal.TerminalToolWindowManager
+import org.nanoya.terminalmanager.TerminalTabHelper
+import org.nanoya.terminalmanager.settings.TerminalManagerConfig
 import org.nanoya.terminalmanager.settings.TerminalManagerSettings
-import org.nanoya.terminalmanager.settings.TerminalTabConfig
 import org.nanoya.terminalmanager.settings.TrustedProjectsSettings
-import java.io.File
-import java.util.Timer
-import kotlin.concurrent.schedule
 
 class ResetTerminalsAction : AnAction(
     "Reset Terminals",
@@ -30,8 +25,9 @@ class ResetTerminalsAction : AnAction(
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
         val settings = TerminalManagerSettings.getInstance(project)
+        val effectiveConfig = settings.getEffectiveConfig()
 
-        if (!settings.skipResetConfirmation) {
+        if (!effectiveConfig.skipResetConfirmation) {
             val result = MessageDialogBuilder.yesNo(
                 "Reset Terminals",
                 "This will close all terminal tabs and reopen the configured startup terminals.\n\nDo you want to continue?"
@@ -57,11 +53,11 @@ class ResetTerminalsAction : AnAction(
             }
         }
 
-        resetTerminals(project, settings)
+        resetTerminals(project, effectiveConfig)
     }
 
-    private fun resetTerminals(project: com.intellij.openapi.project.Project, settings: TerminalManagerSettings) {
-        val enabledTabs = settings.tabs.filter { it.enabled }
+    private fun resetTerminals(project: com.intellij.openapi.project.Project, effectiveConfig: TerminalManagerConfig) {
+        val enabledTabs = effectiveConfig.tabs.filter { it.enabled }
 
         // Check if project is trusted for running startup commands
         val trustedSettings = TrustedProjectsSettings.getInstance()
@@ -76,97 +72,14 @@ class ResetTerminalsAction : AnAction(
                     val terminalManager = TerminalToolWindowManager.getInstance(project)
 
                     // Close all existing terminals
-                    closeAllTerminalTabs(toolWindow.contentManager)
+                    TerminalTabHelper.closeAllTerminalTabs(toolWindow.contentManager)
 
                     // Reopen configured terminals
                     enabledTabs.forEach { tabConfig ->
-                        createTerminalTab(terminalManager, tabConfig, project, canRunCommands)
+                        TerminalTabHelper.createTerminalTab(terminalManager, tabConfig, project, canRunCommands)
                     }
                 }
             }
-        }
-    }
-
-    private fun closeAllTerminalTabs(contentManager: ContentManager) {
-        val contents = contentManager.contents.toList()
-        contents.forEach { content ->
-            contentManager.removeContent(content, true)
-        }
-    }
-
-    private fun createTerminalTab(
-        terminalManager: TerminalToolWindowManager,
-        tabConfig: TerminalTabConfig,
-        project: com.intellij.openapi.project.Project,
-        canRunCommands: Boolean
-    ) {
-        val workingDir = resolveWorkingDirectory(tabConfig.workingDirectory, project)
-        val shellInfo = tabConfig.getShellInfo()
-
-        val tabState = TerminalTabState().apply {
-            myTabName = tabConfig.name
-            myWorkingDirectory = workingDir
-            if (shellInfo != null && shellInfo.id != "default" && shellInfo.command.isNotEmpty()) {
-                myShellCommand = shellInfo.command
-            }
-        }
-
-        terminalManager.createNewSession(terminalManager.terminalRunner, tabState)
-
-        // Execute startup command if configured and project is trusted
-        if (canRunCommands && tabConfig.startupCommand.isNotBlank()) {
-            executeStartupCommand(terminalManager, tabConfig.startupCommand, tabConfig.name)
-        }
-    }
-
-    private fun executeStartupCommand(
-        terminalManager: TerminalToolWindowManager,
-        command: String,
-        tabName: String
-    ) {
-        // Wait for terminal to initialize before sending command
-        Timer().schedule(500) {
-            ApplicationManager.getApplication().invokeLater {
-                try {
-                    // Find the terminal widget by tab name and execute command
-                    val toolWindow = terminalManager.toolWindow ?: return@invokeLater
-                    val contentManager = toolWindow.contentManager
-                    val content = contentManager.contents.find { it.displayName == tabName }
-
-                    content?.let {
-                        val widget = TerminalToolWindowManager.getWidgetByContent(it)
-                        if (widget is ShellTerminalWidget) {
-                            widget.executeCommand(command)
-                        }
-                    }
-                } catch (e: Exception) {
-                    // Silently ignore errors - command execution is best-effort
-                }
-            }
-        }
-    }
-
-    private fun resolveWorkingDirectory(configuredDir: String, project: com.intellij.openapi.project.Project): String {
-        val projectPath = project.basePath ?: System.getProperty("user.home")
-
-        if (configuredDir.isBlank() || configuredDir == ".") {
-            return projectPath
-        }
-
-        val file = File(configuredDir)
-        if (file.isAbsolute) {
-            return if (file.exists() && file.isDirectory) {
-                configuredDir
-            } else {
-                projectPath
-            }
-        }
-
-        val resolved = File(projectPath, configuredDir)
-        return if (resolved.exists() && resolved.isDirectory) {
-            resolved.absolutePath
-        } else {
-            projectPath
         }
     }
 
