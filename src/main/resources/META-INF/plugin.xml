@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>org.nanoya.terminal-manager</id>
     <name>Terminal Manager</name>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
     <vendor email="support@nanoya.org" url="https://github.com/nanoya">Nanoya</vendor>
 
     <description><![CDATA[
@@ -31,6 +31,7 @@
         <li>Tabs matched by name: override specific tab properties without redefining the entire config</li>
         <li>Info banner in settings UI when local overrides are active</li>
         <li>Tab color coding: assign colors (red, green, blue, yellow, orange, purple, cyan, pink) to terminal tabs for easy identification</li>
+        <li>Now supports IDE versions from 2025.1 up to 2026.1</li>
     </ul>
     <b>1.2.0</b>
     <ul>
