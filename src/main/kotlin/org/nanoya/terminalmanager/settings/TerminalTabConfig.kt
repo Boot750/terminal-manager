@@ -1,5 +1,6 @@
 package org.nanoya.terminalmanager.settings
 
+import com.intellij.ui.JBColor
 import java.awt.Color
 import java.awt.Component
 import java.awt.Graphics
@@ -169,14 +170,14 @@ data class TerminalTabConfig(
 
 enum class TabColor(val id: String, val displayName: String, val awtColor: Color?) {
     NONE("", "None", null),
-    RED("red", "Red", Color(0xE74C3C)),
-    GREEN("green", "Green", Color(0x2ECC71)),
-    BLUE("blue", "Blue", Color(0x3498DB)),
-    YELLOW("yellow", "Yellow", Color(0xF1C40F)),
-    ORANGE("orange", "Orange", Color(0xE67E22)),
-    PURPLE("purple", "Purple", Color(0x9B59B6)),
-    CYAN("cyan", "Cyan", Color(0x1ABC9C)),
-    PINK("pink", "Pink", Color(0xE91E63));
+    RED("red", "Red", JBColor.RED),
+    GREEN("green", "Green", JBColor.GREEN),
+    BLUE("blue", "Blue", JBColor.BLUE),
+    YELLOW("yellow", "Yellow", JBColor.YELLOW),
+    ORANGE("orange", "Orange", JBColor.ORANGE),
+    PURPLE("purple", "Purple", JBColor.magenta),
+    CYAN("cyan", "Cyan", JBColor.CYAN),
+    PINK("pink", "Pink", JBColor.PINK),;
 
     override fun toString(): String = displayName
 
