@@ -37,6 +37,10 @@ The plugin adds two buttons to the terminal toolbar:
 
 You can also access settings via **Settings** > **Tools** > **Startup Terminals**
 
+### Open a configured terminal on demand
+
+Your configured terminals also appear in the terminal tool window's **new session dropdown** (the chevron next to the **+** button), listed by name. Selecting one opens that terminal on demand — with its shell, working directory, tmux, startup command and color settings — without waiting for the next project startup.
+
 ### Configuring Terminal Tabs
 
 ![Settings Window](screenshots/terminal-settings.png)

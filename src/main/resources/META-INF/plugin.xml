@@ -91,6 +91,12 @@
         <postStartupActivity implementation="org.nanoya.terminalmanager.TerminalGearActionInstaller"/>
     </extensions>
 
+    <extensions defaultExtensionNs="org.jetbrains.plugins.terminal">
+        <!-- Adds configured startup terminals to the terminal "new session" (+) dropdown. -->
+        <openPredefinedTerminalProvider
+                implementation="org.nanoya.terminalmanager.OpenConfiguredTerminalProvider"/>
+    </extensions>
+
     <actions>
         <action id="TerminalManager.OpenSettings"
                 class="org.nanoya.terminalmanager.actions.OpenSettingsAction"
