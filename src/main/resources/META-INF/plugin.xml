@@ -74,6 +74,8 @@
         <applicationService serviceImplementation="org.nanoya.terminalmanager.settings.TerminalManagerAppSettings"/>
         <projectService serviceImplementation="org.nanoya.terminalmanager.settings.TerminalManagerSettings"/>
 
+        <notificationGroup id="Terminal Manager" displayType="BALLOON"/>
+
         <applicationConfigurable
                 parentId="tools"
                 instance="org.nanoya.terminalmanager.settings.TerminalManagerAppConfigurable"

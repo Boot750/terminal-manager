@@ -12,7 +12,6 @@ import com.intellij.ui.table.JBTable
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
-import java.awt.FlowLayout
 import javax.swing.*
 import javax.swing.table.AbstractTableModel
 import javax.swing.table.TableCellEditor
@@ -58,7 +57,8 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
             columnModel.getColumn(2).preferredWidth = 200  // Working Directory
             columnModel.getColumn(3).preferredWidth = 200  // Startup Command
             columnModel.getColumn(4).preferredWidth = 80   // Color
-            columnModel.getColumn(5).preferredWidth = 60   // Enabled
+            columnModel.getColumn(5).preferredWidth = 90   // Enable tmux
+            columnModel.getColumn(6).preferredWidth = 60   // Enabled
 
             // Shell type dropdown
             columnModel.getColumn(1).cellEditor = ShellInfoCellEditor()
@@ -70,6 +70,9 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
             // Color dropdown
             columnModel.getColumn(4).cellEditor = TabColorCellEditor()
             columnModel.getColumn(4).cellRenderer = TabColorCellRenderer()
+
+            // "Enable tmux" checkbox — greyed out on platforms without tmux.
+            columnModel.getColumn(5).cellRenderer = TmuxCheckBoxRenderer()
         }
 
         val decorator = ToolbarDecorator.createDecorator(table!!)
@@ -208,7 +211,8 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
             current.workingDirectory != saved.workingDirectory ||
             current.enabled != saved.enabled ||
             current.startupCommand != saved.startupCommand ||
-            current.color != saved.color
+            current.color != saved.color ||
+            current.useTmux != saved.useTmux
         }
     }
 
@@ -240,9 +244,34 @@ class TerminalManagerConfigurable(private val project: Project) : Configurable {
     }
 }
 
-class TerminalTabTableModel(private var tabs: MutableList<TerminalTabConfig>) : AbstractTableModel() {
+/**
+ * Renders the "Enable tmux" boolean column. The checkbox is greyed out (disabled) on
+ * platforms where tmux isn't available (Windows), matching the read-only cell behavior.
+ */
+class TmuxCheckBoxRenderer : JCheckBox(), TableCellRenderer {
+    init {
+        horizontalAlignment = SwingConstants.CENTER
+        isBorderPainted = false
+    }
 
-    private val columnNames = arrayOf("Name", "Shell", "Working Directory", "Startup Command", "Color", "Enabled")
+    override fun getTableCellRendererComponent(
+        table: JTable,
+        value: Any?,
+        selected: Boolean,
+        focused: Boolean,
+        row: Int,
+        column: Int
+    ): Component {
+        isSelected = value as? Boolean ?: false
+        isEnabled = ShellDetector.isTmuxPlatform()
+        background = if (selected) table.selectionBackground else table.background
+        foreground = if (selected) table.selectionForeground else table.foreground
+        return this
+    }
+}
+
+class TerminalTabTableModel(private var tabs: MutableList<TerminalTabConfig>) : AbstractTableModel() {
+    private val columnNames = arrayOf("Name", "Shell", "Working Directory", "Startup Command", "Color", "Enable tmux", "Enabled")
 
     override fun getRowCount(): Int = tabs.size
 
@@ -252,12 +281,16 @@ class TerminalTabTableModel(private var tabs: MutableList<TerminalTabConfig>) : 
 
     override fun getColumnClass(columnIndex: Int): Class<*> {
         return when (columnIndex) {
-            5 -> java.lang.Boolean::class.java
+            5, 6 -> java.lang.Boolean::class.java
             else -> String::class.java
         }
     }
 
-    override fun isCellEditable(rowIndex: Int, columnIndex: Int): Boolean = true
+    override fun isCellEditable(rowIndex: Int, columnIndex: Int): Boolean {
+        // tmux column is only editable on macOS/Linux; greyed out (read-only) elsewhere.
+        if (columnIndex == 5) return ShellDetector.isTmuxPlatform()
+        return true
+    }
 
     override fun getValueAt(rowIndex: Int, columnIndex: Int): Any {
         val tab = tabs[rowIndex]
@@ -267,7 +300,8 @@ class TerminalTabTableModel(private var tabs: MutableList<TerminalTabConfig>) : 
             2 -> tab.workingDirectory
             3 -> tab.startupCommand
             4 -> tab.color
-            5 -> tab.enabled
+            5 -> tab.useTmux
+            6 -> tab.enabled
             else -> ""
         }
     }
@@ -280,7 +314,8 @@ class TerminalTabTableModel(private var tabs: MutableList<TerminalTabConfig>) : 
             2 -> tab.workingDirectory = aValue as? String ?: ""
             3 -> tab.startupCommand = aValue as? String ?: ""
             4 -> tab.color = (aValue as? TabColor)?.id ?: (aValue as? String) ?: ""
-            5 -> tab.enabled = aValue as? Boolean ?: true
+            5 -> tab.useTmux = aValue as? Boolean ?: false
+            6 -> tab.enabled = aValue as? Boolean ?: true
         }
         fireTableCellUpdated(rowIndex, columnIndex)
     }
