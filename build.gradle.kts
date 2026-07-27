@@ -2,12 +2,12 @@ import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version "2.1.10"
-    id("org.jetbrains.intellij.platform") version "2.13.1"
+    id("org.jetbrains.kotlin.jvm") version "2.3.20"
+    id("org.jetbrains.intellij.platform") version "2.16.0"
 }
 
 group = "org.nanoya"
-version = "1.3.0"
+version = "1.4.0"
 
 repositories {
     mavenCentral()
@@ -19,13 +19,13 @@ repositories {
 kotlin {
     jvmToolchain(21)
     compilerOptions {
-        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9)
+        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
     }
 }
 
 dependencies {
     intellijPlatform {
-        intellijIdeaUltimate("2025.3.1")
+        intellijIdeaUltimate("2026.1.3")
         bundledPlugin("org.jetbrains.plugins.terminal")
 
         // Plugin Verifier - test against multiple IDE versions
@@ -79,7 +79,7 @@ intellijPlatform {
 tasks {
     patchPluginXml {
         sinceBuild.set("251")
-        untilBuild.set("261.*")
+        untilBuild.set("262.*")
     }
     // Skip searchable options to avoid Gradle plugin Java 25 bug
     buildSearchableOptions {

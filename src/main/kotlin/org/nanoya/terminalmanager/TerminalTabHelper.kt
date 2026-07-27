@@ -71,11 +71,31 @@ object TerminalTabHelper {
             TmuxSupport.verifyLaunch(project, tmuxBinary, appSettings.tmuxCommand, sessionName, tabConfig.name)
         }
 
-        // For tmux tabs the startup command is embedded in the session and runs only
-        // when the session is created (see TmuxSupport.buildCommand), so it isn't re-run
-        // on reattach. For non-tmux tabs, type it into the terminal after it initializes.
-        if (!useTmux && runStartupCommand) {
-            executeStartupCommand(terminalManager, tabConfig.startupCommand, tabConfig.name)
+        // Env injection uses the fallback (prepended shell commands) because TerminalTabState
+        // exposes no env field on this creation path. Shares the trust gate with startup commands.
+        // For tmux tabs the startup command is embedded in the session and runs only when the
+        // session is created (see TmuxSupport.buildCommand), so it isn't re-run on reattach —
+        // only the env commands (idempotent) are typed into the terminal there.
+        if (canRunCommands) {
+            val envCommands = buildEnvCommands(tabConfig.env, tabConfig.shellId)
+            val commands = envCommands +
+                listOfNotNull(tabConfig.startupCommand.takeIf { !useTmux && it.isNotBlank() })
+            if (commands.isNotEmpty()) {
+                executeStartupCommand(terminalManager, commands.joinToString(" && "), tabConfig.name)
+            }
+        }
+    }
+
+    /** Builds shell-appropriate env-setting commands for the fallback injection path. */
+    fun buildEnvCommands(env: Map<String, String>, shellId: String): List<String> {
+        if (env.isEmpty()) return emptyList()
+        val lower = shellId.lowercase()
+        return env.map { (k, v) ->
+            when {
+                lower == "cmd" -> "set \"$k=$v\""
+                lower.startsWith("powershell") || lower == "pwsh" -> "\$env:$k=\"$v\""
+                else -> "export $k=$v" // bash/zsh/wsl/gitbash/cygwin/default
+            }
         }
     }
 

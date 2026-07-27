@@ -14,6 +14,10 @@ I created this plugin out of frustration when working with a monorepo where I ne
 - Optionally run a tab inside a persistent **tmux** session (macOS/Linux) so shells and long-running processes survive IDE restarts
 - Optionally close existing terminal tabs before opening new ones
 - Reset terminals with one click to restore your configured setup
+- Set per-tab environment variables
+- Open a tab only when a given path exists (conditional "Open If" tabs)
+- Open any configured tab on demand from the terminal toolbar
+- Per-machine local overrides via a dedicated "Local" scope in settings (tweak, mute, or add personal tabs) with a live effective preview
 - Per-project configuration stored in `.terminals/startup-terminals.json`
 
 ## Installation
@@ -27,12 +31,13 @@ Install from the JetBrains Marketplace:
 
 ### Toolbar Buttons
 
-The plugin adds two buttons to the terminal toolbar:
+The plugin adds three buttons to the terminal toolbar:
 
 ![Toolbar Buttons](screenshots/toolbar.png)
 
 | Button | Icon | Description |
 |--------|------|-------------|
+| **Open Terminal Tab** | Plus icon | Open any configured tab on demand from a popup list |
 | **Reset Terminals** | Restart icon | Close all terminals and reopen configured startup terminals |
 | **Settings** | Console icon | Open the Startup Terminals settings |
 
@@ -105,18 +110,35 @@ Example configuration:
   "skipResetConfirmation": false,
   "tabs": [
     {
+      "id": "a1b2c3d4-...",
       "name": "AI",
       "shellId": "wsl-ubuntu",
       "workingDirectory": "",
-      "enabled": true
+      "enabled": true,
+      "env": { "NODE_ENV": "development" },
+      "openIf": ""
     },
     {
-      "name": "Build",
+      "id": "e5f6g7h8-...",
+      "name": "Docker",
       "shellId": "default",
       "workingDirectory": "",
       "enabled": true,
+      "openIf": "docker-compose.yml",
       "useTmux": true
     }
   ]
 }
 ```
+
+Each tab is assigned a stable `id` automatically. `env` injects environment variables when the tab opens (requires project trust, like startup commands). `openIf` is a project-root-relative path — the tab opens only if that file or directory exists (blank = always).
+
+### Local Overrides (per-machine)
+
+Open **Settings > Tools > Startup Terminals** and switch the scope toggle to **Local (this machine)** to:
+
+- **Override** a shared tab for this machine only — pick the shared tab from the dropdown and change only the fields you want (shell, working directory, env, etc.).
+- **Mute** a shared tab you don't use locally.
+- **Add a personal tab** that isn't shared with the team.
+
+The **Effective (what will run)** preview shows the merged result and where each tab comes from (Shared / Overridden / Personal). Local overrides are written to `.terminals/startup-terminals.local.json`; the settings screen offers to add this file to `.gitignore` so it stays off the shared config. You no longer need to edit this file by hand.

@@ -188,15 +188,19 @@ object ShellDetector {
 }
 
 data class TerminalTabConfig(
+    var id: String = "",
     var name: String = "Terminal",
     var shellId: String = "default",
     var workingDirectory: String = "",
     var enabled: Boolean = true,
     var startupCommand: String = "",
     var color: String = "",
-    var useTmux: Boolean = false
+    var useTmux: Boolean = false,
+    var env: MutableMap<String, String> = mutableMapOf(),
+    var openIf: String = ""
 ) {
-    fun copy(): TerminalTabConfig = TerminalTabConfig(name, shellId, workingDirectory, enabled, startupCommand, color, useTmux)
+    fun copy(): TerminalTabConfig =
+        TerminalTabConfig(id, name, shellId, workingDirectory, enabled, startupCommand, color, useTmux, LinkedHashMap(env), openIf)
 
     fun getShellInfo(): ShellInfo? {
         return ShellDetector.getAvailableShells().find { it.id == shellId }

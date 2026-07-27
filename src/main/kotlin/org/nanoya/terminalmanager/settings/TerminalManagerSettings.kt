@@ -5,6 +5,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import java.io.File
+import java.util.UUID
 
 @Service(Service.Level.PROJECT)
 class TerminalManagerSettings(private val project: Project) {
@@ -46,7 +47,11 @@ class TerminalManagerSettings(private val project: Project) {
                 enabled = config.enabled
                 closeExistingTerminals = config.closeExistingTerminals
                 skipResetConfirmation = config.skipResetConfirmation
-                tabs = config.tabs.toMutableList()
+                tabs = config.tabs.map { it.copy() }.toMutableList()
+                // One-time migration: assign stable ids and persist if any were missing.
+                if (assignMissingIds(tabs) { UUID.randomUUID().toString() }) {
+                    save()
+                }
             } catch (e: Exception) {
                 enabled = true
                 closeExistingTerminals = false
@@ -56,84 +61,40 @@ class TerminalManagerSettings(private val project: Project) {
         }
     }
 
+    fun loadLocalConfig(): LocalTerminalManagerConfig? {
+        val localFile = getLocalConfigFile()
+        if (!localFile.exists()) return null
+        return try {
+            gson.fromJson(localFile.readText(), LocalTerminalManagerConfig::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun saveLocalConfig(local: LocalTerminalManagerConfig?) {
+        val localFile = getLocalConfigFile()
+        if (ConfigMerger.isLocalEmpty(local)) {
+            if (localFile.exists()) localFile.delete()
+            return
+        }
+        val configDir = getConfigDir()
+        if (!configDir.exists()) configDir.mkdirs()
+        localFile.writeText(gson.toJson(local))
+    }
+
     /**
      * Returns the effective configuration after merging the base config with
-     * local overrides from startup-terminals.local.json.
-     *
-     * Local overrides use nullable fields — only non-null values replace the base.
-     * Tabs are matched by name: a local tab with the same name as a base tab
-     * overrides only the fields that are set. Local tabs with new names are appended.
+     * local overrides from startup-terminals.local.json. Orphaned overrides are excluded.
      */
     fun getEffectiveConfig(): TerminalManagerConfig {
         val baseConfig = TerminalManagerConfig(enabled, closeExistingTerminals, skipResetConfirmation, tabs.toList())
-
-        val localFile = getLocalConfigFile()
-        if (!localFile.exists()) {
-            return baseConfig
-        }
-
-        return try {
-            val json = localFile.readText()
-            val localConfig = gson.fromJson(json, LocalTerminalManagerConfig::class.java)
-            mergeConfigs(baseConfig, localConfig)
-        } catch (e: Exception) {
-            baseConfig
-        }
+        return ConfigMerger.toRuntimeConfig(baseConfig, loadLocalConfig())
     }
 
-    private fun mergeConfigs(base: TerminalManagerConfig, local: LocalTerminalManagerConfig): TerminalManagerConfig {
-        val mergedEnabled = local.enabled ?: base.enabled
-        val mergedCloseExisting = local.closeExistingTerminals ?: base.closeExistingTerminals
-        val mergedSkipReset = local.skipResetConfirmation ?: base.skipResetConfirmation
-
-        val mergedTabs = if (local.tabs != null) {
-            mergeTabs(base.tabs, local.tabs)
-        } else {
-            base.tabs
-        }
-
-        return TerminalManagerConfig(mergedEnabled, mergedCloseExisting, mergedSkipReset, mergedTabs)
-    }
-
-    private fun mergeTabs(baseTabs: List<TerminalTabConfig>, localTabs: List<LocalTerminalTabOverride>): List<TerminalTabConfig> {
-        val result = mutableListOf<TerminalTabConfig>()
-        val matchedLocalNames = mutableSetOf<String>()
-
-        // Merge base tabs with matching local overrides
-        for (baseTab in baseTabs) {
-            val localOverride = localTabs.find { it.name == baseTab.name }
-            if (localOverride != null) {
-                matchedLocalNames.add(localOverride.name)
-                result.add(TerminalTabConfig(
-                    name = baseTab.name,
-                    shellId = localOverride.shellId ?: baseTab.shellId,
-                    workingDirectory = localOverride.workingDirectory ?: baseTab.workingDirectory,
-                    enabled = localOverride.enabled ?: baseTab.enabled,
-                    startupCommand = localOverride.startupCommand ?: baseTab.startupCommand,
-                    color = localOverride.color ?: baseTab.color,
-                    useTmux = localOverride.useTmux ?: baseTab.useTmux
-                ))
-            } else {
-                result.add(baseTab.copy())
-            }
-        }
-
-        // Append local-only tabs (new tabs not in base)
-        for (localTab in localTabs) {
-            if (localTab.name !in matchedLocalNames) {
-                result.add(TerminalTabConfig(
-                    name = localTab.name,
-                    shellId = localTab.shellId ?: "default",
-                    workingDirectory = localTab.workingDirectory ?: "",
-                    enabled = localTab.enabled ?: true,
-                    startupCommand = localTab.startupCommand ?: "",
-                    color = localTab.color ?: "",
-                    useTmux = localTab.useTmux ?: false
-                ))
-            }
-        }
-
-        return result
+    /** Full effective tab list including ORPHANED entries, for the settings preview. */
+    fun getEffectiveTabs(): List<EffectiveTab> {
+        val baseConfig = TerminalManagerConfig(enabled, closeExistingTerminals, skipResetConfirmation, tabs.toList())
+        return ConfigMerger.mergeEffective(baseConfig, loadLocalConfig())
     }
 
     fun save() {
@@ -151,29 +112,17 @@ class TerminalManagerSettings(private val project: Project) {
         fun getInstance(project: Project): TerminalManagerSettings {
             return project.service<TerminalManagerSettings>()
         }
+
+        /** Assigns [idSupplier] ids to any tab with a blank id. Returns true if anything changed. */
+        fun assignMissingIds(tabs: MutableList<TerminalTabConfig>, idSupplier: () -> String): Boolean {
+            var changed = false
+            for (tab in tabs) {
+                if (tab.id.isBlank()) {
+                    tab.id = idSupplier()
+                    changed = true
+                }
+            }
+            return changed
+        }
     }
 }
-
-data class TerminalManagerConfig(
-    val enabled: Boolean = true,
-    val closeExistingTerminals: Boolean = false,
-    val skipResetConfirmation: Boolean = false,
-    val tabs: List<TerminalTabConfig> = emptyList()
-)
-
-data class LocalTerminalManagerConfig(
-    val enabled: Boolean? = null,
-    val closeExistingTerminals: Boolean? = null,
-    val skipResetConfirmation: Boolean? = null,
-    val tabs: List<LocalTerminalTabOverride>? = null
-)
-
-data class LocalTerminalTabOverride(
-    val name: String = "",
-    val shellId: String? = null,
-    val workingDirectory: String? = null,
-    val enabled: Boolean? = null,
-    val startupCommand: String? = null,
-    val color: String? = null,
-    val useTmux: Boolean? = null
-)

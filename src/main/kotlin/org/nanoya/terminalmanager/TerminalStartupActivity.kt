@@ -27,7 +27,9 @@ class TerminalStartupActivity : ProjectActivity {
             return
         }
 
-        val enabledTabs = effectiveConfig.tabs.filter { it.enabled }
+        val enabledTabs = effectiveConfig.tabs.filter {
+            it.enabled && TabOpenGate.shouldOpen(it.openIf, project.basePath)
+        }
         if (enabledTabs.isEmpty()) {
             return
         }

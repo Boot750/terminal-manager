@@ -7,6 +7,7 @@ import com.intellij.openapi.wm.ToolWindowManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
+import org.nanoya.terminalmanager.actions.OpenConfiguredTabAction
 import org.nanoya.terminalmanager.actions.OpenSettingsAction
 import org.nanoya.terminalmanager.actions.ResetTerminalsAction
 
@@ -18,7 +19,7 @@ class TerminalGearActionInstaller : ProjectActivity {
 
         terminalToolWindow?.let { toolWindow ->
             withContext(Dispatchers.EDT) {
-                toolWindow.setTitleActions(listOf(ResetTerminalsAction(), OpenSettingsAction()))
+                toolWindow.setTitleActions(listOf(OpenConfiguredTabAction(), ResetTerminalsAction(), OpenSettingsAction()))
             }
         }
     }

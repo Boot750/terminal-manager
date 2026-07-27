@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>org.nanoya.terminal-manager</id>
     <name>Terminal Manager</name>
-    <version>1.3.0</version>
+    <version>1.4.0</version>
     <vendor email="support@nanoya.org" url="https://github.com/nanoya">Nanoya</vendor>
 
     <description><![CDATA[
@@ -19,11 +19,25 @@
         <li>Name your terminal tabs for easy identification</li>
         <li>Reorder tabs with up/down controls</li>
         <li>Per-project configuration stored in <code>.terminals/startup-terminals.json</code></li>
-        <li>Local overrides via <code>.terminals/startup-terminals.local.json</code> (gitignore-friendly)</li>
+        <li>UI-driven local overrides (per-machine): tweak, mute, or add personal tabs in a "Local" scope with a live effective preview</li>
+        <li>Per-tab environment variables</li>
+        <li>Conditional tabs: open a tab only if a given path exists (Open If)</li>
+        <li>Open any configured tab on demand from the terminal toolbar</li>
     </ul>
     ]]></description>
 
     <change-notes><![CDATA[
+    <b>1.4.0</b>
+    <ul>
+        <li>Verified compatible with the latest IntelliJ-based IDEs (up to 2026.2)</li>
+        <li>Rebuilt local overrides with a UI: a "Local (this machine)" scope lets you tweak, mute, or add personal tabs without editing JSON by hand</li>
+        <li>Overrides attach to a stable tab id (not the tab name), so renaming a shared tab no longer detaches its override</li>
+        <li>Live "Effective (what will run)" preview shows the merged result with each tab's source (Shared / Overridden / Personal / Orphaned)</li>
+        <li>One-click offer to add <code>.terminals/startup-terminals.local.json</code> to <code>.gitignore</code></li>
+        <li>Per-tab environment variables (set in the shared or local layer)</li>
+        <li>Conditional tabs: "Open If" opens a tab only when a given project-relative path exists</li>
+        <li>Open any configured tab on demand from the terminal toolbar</li>
+    </ul>
     <b>1.3.0</b>
     <ul>
         <li>Added local config overrides: create <code>.terminals/startup-terminals.local.json</code> to override individual settings from the shared config</li>
@@ -113,6 +127,12 @@
                 text="Terminal Manager: Reset Terminals"
                 description="Close all terminals and reopen configured startup terminals"
                 icon="AllIcons.Actions.Restart">
+        </action>
+        <action id="TerminalManager.OpenConfiguredTab"
+                class="org.nanoya.terminalmanager.actions.OpenConfiguredTabAction"
+                text="Terminal Manager: Open Configured Tab"
+                description="Open one of the configured terminal tabs on demand"
+                icon="AllIcons.General.Add">
         </action>
 
         <!-- Terminal tab switching actions -->
