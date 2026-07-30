@@ -6,6 +6,8 @@ import com.intellij.ui.content.ContentManager
 import org.jetbrains.plugins.terminal.ShellTerminalWidget
 import org.jetbrains.plugins.terminal.TerminalTabState
 import org.jetbrains.plugins.terminal.TerminalToolWindowManager
+import org.nanoya.terminalmanager.settings.ShellDetector
+import org.nanoya.terminalmanager.settings.TerminalManagerAppSettings
 import org.nanoya.terminalmanager.settings.TerminalTabConfig
 import java.io.File
 import java.util.Timer
@@ -22,11 +24,40 @@ object TerminalTabHelper {
         val workingDir = resolveWorkingDirectory(tabConfig.workingDirectory, project)
         val shellInfo = tabConfig.getShellInfo()
 
+        val baseCommand: List<String>? =
+            if (shellInfo != null && shellInfo.id != "default" && shellInfo.command.isNotEmpty())
+                shellInfo.command else null
+
+        val appSettings = TerminalManagerAppSettings.getInstance()
+        val tmuxBinary = appSettings.tmuxBinary
+        val useTmux = tabConfig.useTmux && ShellDetector.isTmuxAvailable(tmuxBinary)
+        val runStartupCommand = canRunCommands && tabConfig.startupCommand.isNotBlank()
+
+        // When a tab requests tmux, warn the user if tmux can't be used (not found / not
+        // actually tmux) — otherwise the failure is a silent fallback to a normal terminal.
+        if (tabConfig.useTmux && ShellDetector.isTmuxPlatform()) {
+            TmuxSupport.notifyIfBinaryUnusable(project, tmuxBinary)
+        }
+
+        val sessionName = TmuxSupport.sessionName(tabConfig.name, project)
+        val shellCommand: List<String>? =
+            if (useTmux)
+                TmuxSupport.buildCommand(
+                    tmuxBinary,
+                    appSettings.tmuxCommand,
+                    sessionName,
+                    workingDir,
+                    baseCommand,
+                    if (runStartupCommand) tabConfig.startupCommand else null
+                )
+            else
+                baseCommand
+
         val tabState = TerminalTabState().apply {
             myTabName = tabConfig.name
             myWorkingDirectory = workingDir
-            if (shellInfo != null && shellInfo.id != "default" && shellInfo.command.isNotEmpty()) {
-                myShellCommand = shellInfo.command
+            if (shellCommand != null) {
+                myShellCommand = shellCommand
             }
         }
 
@@ -34,7 +65,16 @@ object TerminalTabHelper {
 
         applyTabColor(terminalManager, tabConfig)
 
-        if (canRunCommands && tabConfig.startupCommand.isNotBlank()) {
+        // A valid binary can still be paired with a command tmux rejects, which aborts
+        // before a terminal starts. Verify the tab actually attached and warn if it didn't.
+        if (useTmux) {
+            TmuxSupport.verifyLaunch(project, tmuxBinary, appSettings.tmuxCommand, sessionName, tabConfig.name)
+        }
+
+        // For tmux tabs the startup command is embedded in the session and runs only
+        // when the session is created (see TmuxSupport.buildCommand), so it isn't re-run
+        // on reattach. For non-tmux tabs, type it into the terminal after it initializes.
+        if (!useTmux && runStartupCommand) {
             executeStartupCommand(terminalManager, tabConfig.startupCommand, tabConfig.name)
         }
     }

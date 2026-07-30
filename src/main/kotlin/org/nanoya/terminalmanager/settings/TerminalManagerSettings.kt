@@ -110,7 +110,8 @@ class TerminalManagerSettings(private val project: Project) {
                     workingDirectory = localOverride.workingDirectory ?: baseTab.workingDirectory,
                     enabled = localOverride.enabled ?: baseTab.enabled,
                     startupCommand = localOverride.startupCommand ?: baseTab.startupCommand,
-                    color = localOverride.color ?: baseTab.color
+                    color = localOverride.color ?: baseTab.color,
+                    useTmux = localOverride.useTmux ?: baseTab.useTmux
                 ))
             } else {
                 result.add(baseTab.copy())
@@ -126,7 +127,8 @@ class TerminalManagerSettings(private val project: Project) {
                     workingDirectory = localTab.workingDirectory ?: "",
                     enabled = localTab.enabled ?: true,
                     startupCommand = localTab.startupCommand ?: "",
-                    color = localTab.color ?: ""
+                    color = localTab.color ?: "",
+                    useTmux = localTab.useTmux ?: false
                 ))
             }
         }
@@ -172,5 +174,6 @@ data class LocalTerminalTabOverride(
     val workingDirectory: String? = null,
     val enabled: Boolean? = null,
     val startupCommand: String? = null,
-    val color: String? = null
+    val color: String? = null,
+    val useTmux: Boolean? = null
 )
