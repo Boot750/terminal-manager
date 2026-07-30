@@ -20,6 +20,7 @@ class TerminalManagerAppSettings : PersistentStateComponent<TerminalManagerAppSe
 
     data class State(
         var lockTerminalNavigationToSplitPanel: Boolean = false,
+        var gitignorePromptDismissed: Boolean = false,
         var tmuxBinary: String = DEFAULT_TMUX_BINARY,
         var tmuxCommand: String = DEFAULT_TMUX_COMMAND
     )
@@ -36,6 +37,12 @@ class TerminalManagerAppSettings : PersistentStateComponent<TerminalManagerAppSe
         get() = myState.lockTerminalNavigationToSplitPanel
         set(value) {
             myState.lockTerminalNavigationToSplitPanel = value
+        }
+
+    var gitignorePromptDismissed: Boolean
+        get() = myState.gitignorePromptDismissed
+        set(value) {
+            myState.gitignorePromptDismissed = value
         }
 
     /**

@@ -10,6 +10,7 @@ import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindowManager
 import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
 import org.jetbrains.plugins.terminal.TerminalToolWindowManager
+import org.nanoya.terminalmanager.TabOpenGate
 import org.nanoya.terminalmanager.TerminalTabHelper
 import org.nanoya.terminalmanager.settings.TerminalManagerConfig
 import org.nanoya.terminalmanager.settings.TerminalManagerSettings
@@ -57,7 +58,9 @@ class ResetTerminalsAction : AnAction(
     }
 
     private fun resetTerminals(project: com.intellij.openapi.project.Project, effectiveConfig: TerminalManagerConfig) {
-        val enabledTabs = effectiveConfig.tabs.filter { it.enabled }
+        val enabledTabs = effectiveConfig.tabs.filter {
+            it.enabled && TabOpenGate.shouldOpen(it.openIf, project.basePath)
+        }
 
         // Check if project is trusted for running startup commands
         val trustedSettings = TrustedProjectsSettings.getInstance()
