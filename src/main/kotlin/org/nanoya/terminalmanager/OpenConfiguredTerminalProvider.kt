@@ -2,6 +2,7 @@ package org.nanoya.terminalmanager
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.Separator
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
@@ -9,6 +10,7 @@ import com.intellij.openapi.wm.ToolWindowManager
 import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
 import org.jetbrains.plugins.terminal.TerminalToolWindowManager
 import org.jetbrains.plugins.terminal.ui.OpenPredefinedTerminalActionProvider
+import org.nanoya.terminalmanager.actions.OpenSettingsAction
 import org.nanoya.terminalmanager.settings.TerminalManagerSettings
 import org.nanoya.terminalmanager.settings.TerminalTabConfig
 import org.nanoya.terminalmanager.settings.TrustedProjectsSettings
@@ -23,7 +25,16 @@ class OpenConfiguredTerminalProvider : OpenPredefinedTerminalActionProvider {
 
     override fun listOpenPredefinedTerminalActions(project: Project): List<AnAction> {
         val config = TerminalManagerSettings.getInstance(project).getEffectiveConfig()
-        return config.tabs.map { OpenConfiguredTerminalAction(it) }
+        val actions = mutableListOf<AnAction>()
+        if (config.tabs.isNotEmpty()) {
+            actions += Separator.create()
+            config.tabs.mapTo(actions) { OpenConfiguredTerminalAction(it) }
+        }
+        actions += Separator.create()
+        actions += OpenSettingsAction().apply {
+            templatePresentation.text = "Terminal Manager Settings…"
+        }
+        return actions
     }
 }
 
