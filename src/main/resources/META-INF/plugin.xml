@@ -22,7 +22,8 @@
         <li>UI-driven local overrides (per-machine): tweak, mute, or add personal tabs in a "Local" scope with a live effective preview</li>
         <li>Per-tab environment variables</li>
         <li>Conditional tabs: open a tab only if a given path exists (Open If)</li>
-        <li>Open any configured tab on demand from the terminal toolbar</li>
+        <li>Open any configured tab on demand from the terminal toolbar or the new-session dropdown</li>
+        <li>Run tabs inside persistent tmux sessions (macOS/Linux) that survive IDE restarts</li>
     </ul>
     ]]></description>
 
@@ -30,6 +31,8 @@
     <b>1.4.0</b>
     <ul>
         <li>Verified compatible with the latest IntelliJ-based IDEs (up to 2026.2)</li>
+        <li>tmux support (macOS/Linux): run a tab inside a persistent tmux session so shells and long-running processes survive IDE restarts — contributed by <a href="https://github.com/hoxi">@hoxi</a></li>
+        <li>Configured terminals appear in the terminal's new-session dropdown (the chevron next to the + button) for opening on demand — contributed by <a href="https://github.com/hoxi">@hoxi</a></li>
         <li>Rebuilt local overrides with a UI: a "Local (this machine)" scope lets you tweak, mute, or add personal tabs without editing JSON by hand</li>
         <li>Overrides attach to a stable tab id (not the tab name), so renaming a shared tab no longer detaches its override</li>
         <li>Live "Effective (what will run)" preview shows the merged result with each tab's source (Shared / Overridden / Personal / Orphaned)</li>
