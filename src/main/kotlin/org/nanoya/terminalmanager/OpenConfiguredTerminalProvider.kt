@@ -27,7 +27,7 @@ class OpenConfiguredTerminalProvider : OpenPredefinedTerminalActionProvider {
         val config = TerminalManagerSettings.getInstance(project).getEffectiveConfig()
         val actions = mutableListOf<AnAction>()
         if (config.tabs.isNotEmpty()) {
-            actions += Separator.create("Configured Terminals")
+            actions += Separator.create()
             config.tabs.mapTo(actions) { OpenConfiguredTerminalAction(it) }
         }
         actions += Separator.create()
