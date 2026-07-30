@@ -39,7 +39,7 @@ object TerminalTabHelper {
             TmuxSupport.notifyIfBinaryUnusable(project, tmuxBinary)
         }
 
-        val sessionName = TmuxSupport.sessionName(tabConfig.name)
+        val sessionName = TmuxSupport.sessionName(tabConfig.name, project)
         val shellCommand: List<String>? =
             if (useTmux)
                 TmuxSupport.buildCommand(

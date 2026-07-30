@@ -4,7 +4,6 @@ import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
-import org.nanoya.terminalmanager.settings.ShellDetector
 import org.nanoya.terminalmanager.settings.TmuxValidator
 import java.util.Collections
 
@@ -30,12 +29,15 @@ object TmuxSupport {
     private val notifiedBadBinaries = Collections.synchronizedSet(HashSet<String>())
 
     /**
-     * Sanitizes a tab name into a valid tmux session name. tmux disallows '.' and ':' and
+     * Ensures unique tmux session name per project and tab and
+     * sanitizes a tab name into a valid tmux session name. tmux disallows '.' and ':' and
      * treats whitespace awkwardly, so those are replaced with underscores.
      */
-    fun sessionName(tabName: String): String {
-        val sanitized = tabName.trim().replace(Regex("[.:\\s]"), "_")
-        return sanitized.ifBlank { "terminal" }
+    fun sessionName(tabName: String, project: Project): String {
+        val tab = sanitizeTmuxSessionName(tabName).ifBlank { "terminal" }
+        val prj = sanitizeTmuxSessionName(project.name).ifBlank { "project" }
+        val pathHash = Integer.toHexString(project.basePath?.hashCode() ?: 0)
+        return "${prj}_${pathHash}_${tab}"
     }
 
     /**
@@ -178,4 +180,6 @@ object TmuxSupport {
             .createNotification(title, content, type)
             .notify(project)
     }
+
+    private fun sanitizeTmuxSessionName(s: String) = s.trim().replace(Regex("[.:\\s]"), "_")
 }
