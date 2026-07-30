@@ -147,6 +147,44 @@ object ShellDetector {
     fun refreshCache() {
         cachedShells = null
     }
+
+    /**
+     * True when the current OS supports tmux (macOS or Linux). Used to enable/disable
+     * the per-tab tmux option in the settings UI regardless of whether tmux is installed.
+     */
+    fun isTmuxPlatform(): Boolean {
+        val os = System.getProperty("os.name").lowercase()
+        return os.contains("linux") || os.contains("mac") || os.contains("darwin")
+    }
+
+    /**
+     * True when tmux can actually be launched: a supported OS AND the configured
+     * binary can be resolved. A bare name (e.g. "tmux") is looked up in PATH;
+     * a path containing a separator is checked directly.
+     */
+    fun isTmuxAvailable(binary: String): Boolean {
+        if (!isTmuxPlatform()) return false
+        return resolveTmuxBinary(binary) != null
+    }
+
+    /**
+     * Resolves the tmux binary to an executable file, or null if not found.
+     */
+    fun resolveTmuxBinary(binary: String): File? {
+        val name = binary.ifBlank { "tmux" }
+
+        if (name.contains(File.separatorChar) || name.contains('/')) {
+            val f = File(name)
+            return if (f.isFile && f.canExecute()) f else null
+        }
+
+        val pathEnv = System.getenv("PATH") ?: return null
+        return pathEnv.split(File.pathSeparator)
+            .asSequence()
+            .filter { it.isNotBlank() }
+            .map { File(it, name) }
+            .firstOrNull { it.isFile && it.canExecute() }
+    }
 }
 
 data class TerminalTabConfig(
@@ -155,9 +193,10 @@ data class TerminalTabConfig(
     var workingDirectory: String = "",
     var enabled: Boolean = true,
     var startupCommand: String = "",
-    var color: String = ""
+    var color: String = "",
+    var useTmux: Boolean = false
 ) {
-    fun copy(): TerminalTabConfig = TerminalTabConfig(name, shellId, workingDirectory, enabled, startupCommand, color)
+    fun copy(): TerminalTabConfig = TerminalTabConfig(name, shellId, workingDirectory, enabled, startupCommand, color, useTmux)
 
     fun getShellInfo(): ShellInfo? {
         return ShellDetector.getAvailableShells().find { it.id == shellId }
