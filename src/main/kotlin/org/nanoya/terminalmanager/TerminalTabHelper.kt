@@ -2,6 +2,7 @@ package org.nanoya.terminalmanager
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
+import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentManager
 import org.jetbrains.plugins.terminal.ShellTerminalWidget
 import org.jetbrains.plugins.terminal.TerminalTabState
@@ -102,7 +103,17 @@ object TerminalTabHelper {
     fun closeAllTerminalTabs(contentManager: ContentManager) {
         val contents = contentManager.contents.toList()
         contents.forEach { content ->
-            contentManager.removeContent(content, true)
+            // Suppress the terminal's "Process 'X' Is Running" close confirmation. The user
+            // explicitly opted into closing existing tabs, and the modal would otherwise
+            // block startup for every tab whose shell reports (or fails to report) running
+            // child processes. Same mechanism as the terminal plugin's own
+            // TerminalTabCloseListener.executeContentOperationSilently.
+            content.putUserData(Content.TEMPORARY_REMOVED_KEY, true)
+            try {
+                contentManager.removeContent(content, true)
+            } finally {
+                content.putUserData(Content.TEMPORARY_REMOVED_KEY, null)
+            }
         }
     }
 
