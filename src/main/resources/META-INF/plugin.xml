@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>org.nanoya.terminal-manager</id>
     <name>Terminal Manager</name>
-    <version>1.4.0</version>
+    <version>1.4.1</version>
     <vendor email="support@nanoya.org" url="https://github.com/nanoya">Nanoya</vendor>
 
     <description><![CDATA[
@@ -28,6 +28,10 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <b>1.4.1</b>
+    <ul>
+        <li>Compatible with IntelliJ-based IDEs 2026.3 (builds up to 263.*)</li>
+    </ul>
     <b>1.4.0</b>
     <ul>
         <li>Verified compatible with the latest IntelliJ-based IDEs (up to 2026.2)</li>

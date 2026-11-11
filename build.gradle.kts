@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "org.nanoya"
-version = "1.4.0"
+version = "1.4.1"
 
 repositories {
     mavenCentral()
@@ -25,7 +25,7 @@ kotlin {
 
 dependencies {
     intellijPlatform {
-        intellijIdeaUltimate("2026.1.3")
+        intellijIdeaUltimate("2026.3")
         bundledPlugin("org.jetbrains.plugins.terminal")
 
         // Plugin Verifier - test against multiple IDE versions
@@ -79,7 +79,7 @@ intellijPlatform {
 tasks {
     patchPluginXml {
         sinceBuild.set("251")
-        untilBuild.set("262.*")
+        untilBuild.set("263.*")
     }
     // Skip searchable options to avoid Gradle plugin Java 25 bug
     buildSearchableOptions {
